@@ -75,16 +75,15 @@
     // 1. Inisialisasi Peta
     const map = L.map('map').setView([-7.4685, 110.2680], 14);
 
-    // 2. Pilihan Basemap
+    // 2. Pilihan Basemap (Tanpa API Key)
     const petaJalan = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    const cartoLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      maxZoom: 20,
-      subdomains: 'abcd',
-      attribution: '&copy; OpenStreetMap &copy; CARTO'
+    const petaJalanEsri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 19,
+      attribution: '&copy; Esri'
     });
 
     const satelit = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
@@ -136,6 +135,11 @@
     const baseMaps = {
       "Peta Jalan (OSM)": petaJalan,
       "Carto Light": cartoLight,
+      "Citra Satelit (Esri)": satelit
+    };
+    const baseMaps = {
+      "OpenStreetMap": petaJalan,
+      "Esri Street Map": petaJalanEsri,
       "Citra Satelit (Esri)": satelit
     };
 
