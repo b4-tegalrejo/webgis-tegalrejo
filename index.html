@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WebGIS Kawasan Perkotaan Tegalrejo — Kabupaten Magelang</title>
+
+  <!-- Library CSS Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+    body { display: flex; flex-direction: column; height: 100vh; }
+
+    /* Header / Navbar */
+    header {
+      background: #1e293b;
+      color: #f8fafc;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      z-index: 1000;
+    }
+    header h1 { font-size: 1.05rem; font-weight: 600; }
+    header span { font-size: 0.82rem; color: #94a3b8; }
+
+    /* Area Peta */
+    #map { flex: 1; width: 100%; }
+
+    /* Kotak Legenda */
+    .legend-box {
+      background: rgba(255, 255, 255, 0.96);
+      padding: 10px 14px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.22);
+      max-height: 310px;
+      overflow-y: auto;
+      font-size: 11.5px;
+      color: #1e293b;
+      line-height: 1.45;
+    }
+    .legend-box h4 {
+      margin: 6px 0 5px;
+      font-size: 12px;
+      border-bottom: 1px solid #cbd5e1;
+      padding-bottom: 3px;
+      color: #0f172a;
+    }
+    .legend-box h4:first-child { margin-top: 0; }
+    .legend-item { display: flex; align-items: center; gap: 7px; margin-bottom: 3px; }
+    .swatch-poly { width: 14px; height: 14px; border-radius: 2px; border: 1px solid rgba(0,0,0,0.25); flex-shrink: 0; }
+    .swatch-line { width: 18px; height: 0; flex-shrink: 0; }
+
+    /* Pop-up tabel rapi */
+    .popup-table { border-collapse: collapse; width: 100%; font-size: 12px; }
+    .popup-table td { padding: 3px 6px; border-bottom: 1px solid #e2e8f0; }
+    .popup-table td:first-child { font-weight: 600; color: #334155; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>WebGIS Penggunaan Lahan & Jaringan Jalan — Kawasan Perkotaan Tegalrejo</h1>
+    <span>Kabupaten Magelang</span>
+  </header>
+
+  <div id="map"></div>
+
+  <!-- Library JS Leaflet -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    // 1. Inisialisasi Peta
+    const map = L.map('map').setView([-7.4685, 110.2680], 14);
+
+    // 2. Pilihan Basemap (Bebas Blokir)
+    const petaJalan = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 20,
+      attribution: '&copy; OpenStreetMap &copy; CARTO'
+    }).addTo(map);
+
+    const satelit = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 20,
+      attribution: '&copy; Esri World Imagery'
+    });
+
+    // 3. Fungsi Pewarnaan Poligon Penggunaan Lahan (Kolom: JENIS)
+    function getWarnaPL(jenis) {
+      if (!jenis) return '#cccccc';
+      const j = jenis.toLowerCase();
+      if (j.includes('hunian') || j.includes('permukiman')) return '#ffaa00';
+      if (j.includes('perdagangan') || j.includes('jasa')) return '#ff2600';
+      if (j.includes('perkantoran')) return '#d946ef';
+      if (j.includes('pendidikan')) return '#eab308';
+      if (j.includes('kesehatan')) return '#ec4899';
+      if (j.includes('peribadatan')) return '#14b8a6';
+      if (j.includes('industri')) return '#6366f1';
+      if (j.includes('pertahanan') || j.includes('keamanan')) return '#7c3aed';
+      if (j.includes('sawah') || j.includes('pertanian') || j.includes('tegalan')) return '#fde047';
+      if (j.includes('kebun') || j.includes('rth') || j.includes('hutan') || j.includes('lapangan')) return '#84cc16';
+      if (j.includes('pemakaman')) return '#22c55e';
+      if (j.includes('kolam') || j.includes('sungai') || j.includes('air')) return '#38bdf8';
+      if (j.includes('jalan')) return '#94a3b8';
+      return '#cbd5e1';
+    }
+
+    // 4. Fungsi Gaya Garis Jaringan Jalan (Kolom: fungsi_jal)
+    function getStyleJalan(feature) {
+      const f = (feature.properties.fungsi_jal || '').toLowerCase();
+      if (f.includes('arteri')) return { color: '#dc2626', weight: 4.5, opacity: 1 };
+      if (f.includes('kolektor')) return { color: '#f97316', weight: 3.2, opacity: 1 };
+      if (f.includes('lokal')) return { color: '#7e22ce', weight: 2.2, opacity: 0.95 };
+      return { color: '#334155', weight: 1.4, opacity: 0.85 }; // Jalan Lingkungan / lainnya
+    }
+
+    // 5. Fungsi Pop-up Atribut Saat Fitur Diklik
+    function buatPopup(feature, layer, judul) {
+      if (!feature.properties) return;
+      let rows = '';
+      for (const [key, val] of Object.entries(feature.properties)) {
+        if (val !== null && val !== '' && key !== 'OBJECTID' && key !== 'Id') {
+          rows += `<tr><td>${key}</td><td>${val}</td></tr>`;
+        }
+      }
+      layer.bindPopup(`<div style="min-width:190px;"><b style="font-size:13px;">${judul}</b><hr style="margin:5px 0;"><table class="popup-table">${rows}</table></div>`);
+    }
+
+    // 6. Kontrol Layer (Basemap & Overlay)
+    const baseMaps = {
+      "Peta Jalan (Carto)": petaJalan,
+      "Citra Satelit (Esri)": satelit
+    };
+    const layerControl = L.control.layers(baseMaps, {}, { collapsed: false }).addTo(map);
+
+    // 7. Muat GeoJSON Penggunaan Lahan (pl_tegalrejo.geojson) lalu Jaringan Jalan (jalan_tegalrejo.geojson)
+    fetch('pl_tegalrejo.geojson')
+      .then(res => res.json())
+      .then(dataPL => {
+        const layerPL = L.geoJSON(dataPL, {
+          style: feature => ({
+            fillColor: getWarnaPL(feature.properties.JENIS),
+            color: '#64748b',
+            weight: 0.4,
+            fillOpacity: 0.8
+          }),
+          onEachFeature: (feature, layer) => buatPopup(feature, layer, 'Penggunaan Lahan')
+        }).addTo(map);
+
+        layerControl.addOverlay(layerPL, "Penggunaan Lahan (PL)");
+        map.fitBounds(layerPL.getBounds()); // Otomatis zoom pas ke batas Tegalrejo
+
+        // Muat Jaringan Jalan setelah PL agar garis selalu berada di lapisan atas
+        return fetch('jalan_tegalrejo.geojson');
+      })
+      .then(res => res.json())
+      .then(dataJalan => {
+        const layerJalan = L.geoJSON(dataJalan, {
+          style: getStyleJalan,
+          onEachFeature: (feature, layer) => buatPopup(feature, layer, 'Jaringan Jalan')
+        }).addTo(map);
+
+        layerControl.addOverlay(layerJalan, "Jaringan Jalan");
+      })
+      .catch(err => console.error('Gagal memuat GeoJSON:', err));
+
+    // 8. Kotak Legenda di Pojok Kiri Bawah
+    const legend = L.control({ position: 'bottomleft' });
+    legend.onAdd = function () {
+      const div = L.DomUtil.create('div', 'legend-box');
+      div.innerHTML = `
+        <h4>Jaringan Jalan</h4>
+        <div class="legend-item"><span class="swatch-line" style="border-top: 4px solid #dc2626;"></span>Jalan Arteri</div>
+        <div class="legend-item"><span class="swatch-line" style="border-top: 3px solid #f97316;"></span>Jalan Kolektor</div>
+        <div class="legend-item"><span class="swatch-line" style="border-top: 2px solid #7e22ce;"></span>Jalan Lokal</div>
+        <div class="legend-item"><span class="swatch-line" style="border-top: 1.5px solid #334155;"></span>Jalan Lingkungan</div>
+
+        <h4>Penggunaan Lahan</h4>
+        <div class="legend-item"><span class="swatch-poly" style="background:#ffaa00;"></span>Bangunan Hunian</div>
+        <div class="legend-item"><span class="swatch-poly" style="background:#ff2600;"></span>Perdagangan & Jasa</div>
+        <div class="legend-item"><span class="swatch-poly" style="background:#d946ef;"></span>Perkantoran</div>
+        <div class="legend-item"><span class="swatch-poly" style="background:#eab308;"></span>Pendidikan</div>
+        <div class="legend-item"><span class="swatch-poly" style="background:#ec4899;"></span>Kesehatan</div>
+        <div class="legend-item"><span class="swatch-poly" style="background:#14b8a6;"></span>Peribadatan</div>
+        <div class="legend-item"><span class="swatch-poly" style="background:#6366f1;"></span>Industri</div>
+        <div class="legend-item"><span class="swatch-poly" style="background:#fde047;"></span>Pertanian / Sawah</div>
+        <div class="legend-item"><span class="swatch-poly" style="background:#84cc16;"></span>Kebun / RTH / Lapangan</div>
+        <div class="legend-item"><span class="swatch-poly" style="background:#22c55e;"></span>Pemakaman</div>
+        <div class="legend-item"><span class="swatch-poly" style="background:#38bdf8;"></span>Badan Air / Kolam</div>
+      `;
+      return div;
+    };
+    legend.addTo(map);
+  </script>
+
+</body>
+</html>
