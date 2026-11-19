@@ -75,11 +75,17 @@
     // 1. Inisialisasi Peta
     const map = L.map('map').setView([-7.4685, 110.2680], 14);
 
-    // 2. Pilihan Basemap (Bebas Blokir)
-    const petaJalan = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      maxZoom: 20,
-      attribution: '&copy; OpenStreetMap &copy; CARTO'
+    // 2. Pilihan Basemap
+    const petaJalan = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
+
+    const cartoLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 20,
+      subdomains: 'abcd',
+      attribution: '&copy; OpenStreetMap &copy; CARTO'
+    });
 
     const satelit = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
       maxZoom: 20,
@@ -127,12 +133,11 @@
       layer.bindPopup(`<div style="min-width:190px;"><b style="font-size:13px;">${judul}</b><hr style="margin:5px 0;"><table class="popup-table">${rows}</table></div>`);
     }
 
-    // 6. Kontrol Layer (Basemap & Overlay)
     const baseMaps = {
-      "Peta Jalan (Carto)": petaJalan,
+      "Peta Jalan (OSM)": petaJalan,
+      "Carto Light": cartoLight,
       "Citra Satelit (Esri)": satelit
     };
-    const layerControl = L.control.layers(baseMaps, {}, { collapsed: false }).addTo(map);
 
     // 7. Muat GeoJSON Penggunaan Lahan (pl_tegalrejo.geojson) lalu Jaringan Jalan (jalan_tegalrejo.geojson)
     fetch('pl_tegalrejo.geojson')
