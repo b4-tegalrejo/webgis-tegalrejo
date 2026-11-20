@@ -3,287 +3,311 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WebGIS Tegalrejo — Sistem Informasi Geospasial</title>
-
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <title>WebGIS Tegalrejo — Kawasan Perkotaan Tegalrejo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
     :root {
-      --forest-bg: #071b13;
-      --forest-surface: #0d281d;
-      --accent-pink: #ec4899;
-      --accent-pink-hover: #db2777;
-      --panel-bg: #ffffff;
-      --text-dark: #0f172a;
-      --text-muted: #64748b;
+      --bg-page: #f4f7fb;
+      --surface: #ffffff;
+      --primary: #1d4ed8;
+      --primary-dark: #1e40af;
+      --accent: #0ea5e9;
+      --text: #0f172a;
+      --muted: #64748b;
       --border: #e2e8f0;
+      --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; scroll-behavior: smooth; }
-    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--forest-bg); color: #f8fafc; }
-
-    /* Navbar & Hero (Nuansa Referensi Kedua) */
-    .navbar {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 18px 6%; border-bottom: 1px solid rgba(255,255,255,0.08);
-      position: sticky; top: 0; background: rgba(7, 27, 19, 0.9); backdrop-filter: blur(10px); z-index: 1100;
-    }
-    .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; }
-    .brand-circle { width: 34px; height: 34px; border-radius: 50%; background: var(--forest-surface); border: 1px solid rgba(255,255,255,0.2); display: grid; place-items: center; font-size: 12px; }
-    .nav-links { display: flex; gap: 24px; align-items: center; font-size: 14px; }
-    .nav-links a { color: #cbd5e1; text-decoration: none; }
-    .nav-links a:hover { color: #fff; }
-    .btn-pink {
-      background: var(--accent-pink); color: #fff; border: none; padding: 10px 18px;
-      border-radius: 8px; font-weight: 600; font-size: 13px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
-    }
-    .btn-pink:hover { background: var(--accent-pink-hover); }
-    .btn-ghost {
-      background: rgba(255,255,255,0.06); color: #fff; border: 1px solid rgba(255,255,255,0.18);
-      padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 13px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 90% 10%, rgba(14, 165, 233, 0.14), transparent 35%),
+        radial-gradient(circle at 10% 85%, rgba(29, 78, 216, 0.10), transparent 35%),
+        var(--bg-page);
+      color: var(--text);
     }
 
+    /* Header */
+    .topbar {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-icon {
+      width: 40px; height: 40px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: #fff; display: grid; place-items: center; font-size: 16px;
+      box-shadow: 0 6px 16px rgba(29, 78, 216, 0.25);
+    }
+    .brand-title { font-weight: 700; font-size: 15px; }
+    .brand-sub { font-size: 11.5px; color: var(--muted); }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      text-decoration: none;
+      padding: 11px 18px;
+      border-radius: 10px;
+      font-size: 13.5px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: 0.2s ease;
+      box-shadow: 0 8px 20px rgba(29, 78, 216, 0.22);
+    }
+    .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+
+    /* Hero Grid */
     .hero {
-      padding: 56px 6% 48px; display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 36px; align-items: center;
-      background: radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.14), transparent 50%);
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px 24px 56px;
+      display: grid;
+      grid-template-columns: 1.05fr 1.15fr;
+      gap: 32px;
+      align-items: center;
     }
-    .loc-pill {
-      display: inline-block; padding: 6px 14px; border-radius: 999px;
-      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.14);
-      font-size: 12px; color: #e2e8f0; margin-bottom: 18px;
-    }
-    .hero h1 { font-family: 'Instrument Serif', serif; font-size: clamp(42px, 5vw, 66px); line-height: 1.02; font-weight: 400; margin-bottom: 18px; }
-    .hero h1 span.pink-italic { color: var(--accent-pink); font-style: italic; }
-    .hero p { color: #cbd5e1; font-size: 15px; line-height: 1.6; max-width: 520px; margin-bottom: 24px; }
-    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 34px; }
-    .hero-stats { display: flex; gap: 32px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; }
-    .hero-stats strong { display: block; font-size: 20px; color: #fff; }
-    .hero-stats span { font-size: 12px; color: #94a3b8; }
 
-    /* Bagian Peta Dashboard (Gaya Referensi Pertama) */
-    #map-section {
-      height: 88vh; min-height: 580px; width: 100%; position: relative;
-      display: flex; border-top: 1px solid rgba(255,255,255,0.12); color: var(--text-dark);
+    .badge-loc {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #fff;
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 16px;
     }
-    .map-sidebar {
-      width: 290px; background: var(--panel-bg); border-right: 1px solid var(--border);
-      display: flex; flex-direction: column; z-index: 500;
-    }
-    .map-sidebar-top { padding: 14px 16px; border-bottom: 1px solid var(--border); }
-    .map-sidebar-top h2 { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
-    .map-search {
-      width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px;
-      font-size: 12.5px; outline: none;
-    }
-    .map-layers { padding: 12px 16px; overflow-y: auto; flex: 1; }
-    .layer-group-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin: 10px 0 6px; }
-    .layer-row {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 7px 8px; border-radius: 8px; font-size: 12.5px; cursor: pointer;
-    }
-    .layer-row:hover { background: #f8fafc; }
-    .layer-row label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 500; }
-    .layer-row input { accent-color: var(--accent-pink); cursor: pointer; }
-    .swatch { width: 10px; height: 10px; border-radius: 50%; }
 
-    #tegalrejo-map { flex: 1; height: 100%; z-index: 1; }
+    .hero-left h1 {
+      font-size: clamp(32px, 4vw, 48px);
+      line-height: 1.12;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 14px;
+    }
+    .hero-left h1 span { color: var(--primary); }
+    .hero-left p {
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.65;
+      margin-bottom: 24px;
+      max-width: 500px;
+    }
 
-    .right-widgets {
-      position: absolute; top: 14px; right: 14px; width: 265px; z-index: 500;
-      display: flex; flex-direction: column; gap: 10px; pointer-events: none;
-    }
-    .widget-box {
-      background: rgba(255,255,255,0.94); backdrop-filter: blur(10px);
-      border-radius: 12px; padding: 12px 14px; box-shadow: 0 10px 24px rgba(0,0,0,0.16); pointer-events: auto;
-    }
-    .widget-box h3 { font-size: 12.5px; font-weight: 700; margin-bottom: 8px; color: var(--text-dark); }
+    .cta-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 28px; }
+    .cta-note { font-size: 12.5px; color: var(--muted); }
 
-    .floating-zoom {
-      position: absolute; bottom: 22px; right: 14px; z-index: 500;
-      background: #fff; border-radius: 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.16);
-      display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--border);
+    /* Daftar Poin Keunggulan ala Referensi Kiri */
+    .feature-stack { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .feature-pill {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
     }
-    .floating-zoom button {
-      width: 34px; height: 34px; border: none; background: #fff; color: var(--text-dark);
-      cursor: pointer; border-bottom: 1px solid var(--border); display: grid; place-items: center;
+    .feature-pill i {
+      width: 34px; height: 34px; border-radius: 10px;
+      background: #eff6ff; color: var(--primary);
+      display: grid; place-items: center; font-size: 14px; flex-shrink: 0;
     }
-    .floating-zoom button:last-child { border-bottom: none; }
-    .floating-zoom button:hover { background: #fdf2f8; color: var(--accent-pink); }
+    .feature-pill strong { display: block; font-size: 12.5px; color: var(--text); }
+    .feature-pill span { font-size: 11px; color: var(--muted); }
+
+    /* Showcase Kanan ala Referensi */
+    .hero-right { position: relative; }
+    .mockup-window {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .mockup-bar {
+      background: #f8fafc;
+      border-bottom: 1px solid var(--border);
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .dots { display: flex; gap: 6px; }
+    .dots i { width: 9px; height: 9px; border-radius: 50%; display: block; }
+    .dots i:nth-child(1) { background: #f87171; }
+    .dots i:nth-child(2) { background: #fbbf24; }
+    .dots i:nth-child(3) { background: #34d399; }
+
+    .mockup-body {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      min-height: 300px;
+    }
+    .mockup-side {
+      border-right: 1px solid var(--border);
+      padding: 12px;
+      background: #fcfdff;
+      font-size: 11.5px;
+    }
+    .mockup-side .side-label { font-weight: 700; color: var(--text); margin-bottom: 8px; }
+    .mock-item {
+      padding: 6px 8px; border-radius: 7px; background: #f1f5f9;
+      color: var(--text); margin-bottom: 6px; display: flex; align-items: center; gap: 6px;
+    }
+
+    .mockup-map {
+      position: relative;
+      background:
+        linear-gradient(135deg, rgba(16, 185, 129, 0.22), rgba(14, 165, 233, 0.22)),
+        repeating-linear-gradient(0deg, rgba(255,255,255,0.25) 0 1px, transparent 1px 24px),
+        repeating-linear-gradient(90deg, rgba(255,255,255,0.25) 0 1px, transparent 1px 24px),
+        #cbd5e1;
+      padding: 16px;
+    }
+    .zone-box {
+      position: absolute;
+      border-radius: 8px;
+      border: 2px solid #fff;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+    }
+    .zone-1 { width: 110px; height: 70px; top: 38px; left: 36px; background: rgba(245, 158, 11, 0.65); }
+    .zone-2 { width: 95px; height: 60px; top: 88px; left: 118px; background: rgba(59, 130, 246, 0.65); }
+    .pin-dot {
+      position: absolute; width: 14px; height: 14px; border-radius: 50%;
+      background: #ef4444; border: 2px solid #fff; box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+    }
+
+    /* Kartu Melayang di Pojok Kanan */
+    .floating-stat {
+      position: absolute;
+      right: -12px;
+      bottom: -18px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 16px;
+      box-shadow: var(--shadow);
+      width: 215px;
+    }
+    .floating-stat small { color: var(--muted); font-size: 11px; display: block; }
+    .floating-stat strong { font-size: 14px; color: var(--text); }
+    .bar-mini { display: flex; align-items: flex-end; gap: 6px; height: 42px; margin-top: 8px; }
+    .bar-mini span { flex: 1; background: var(--primary); border-radius: 4px 4px 0 0; opacity: 0.85; }
 
     @media (max-width: 900px) {
       .hero { grid-template-columns: 1fr; }
-      #map-section { flex-direction: column; height: auto; }
-      .map-sidebar { width: 100%; max-height: 260px; }
-      #tegalrejo-map { height: 460px; }
-      .right-widgets { position: static; width: 100%; padding: 12px; pointer-events: auto; }
+      .feature-stack { grid-template-columns: 1fr; }
+      .floating-stat { position: static; width: 100%; margin-top: 12px; }
     }
   </style>
 </head>
 <body>
 
-  <header class="navbar">
+  <header class="topbar">
     <div class="brand">
-      <div class="brand-circle">TR</div>
+      <div class="brand-icon"><i class="fa-solid fa-map"></i></div>
       <div>
-        <div style="font-size:13px;">Tegalrejo</div>
-        <div style="font-size:10px; color:#94a3b8;">Sistem Informasi Geospasial</div>
+        <div class="brand-title">WebGIS Tegalrejo</div>
+        <div class="brand-sub">Kawasan Perkotaan Tegalrejo</div>
       </div>
     </div>
-    <nav class="nav-links">
-      <a href="#top">Beranda</a>
-      <a href="#map-section">Peta Interaktif</a>
-      <a href="#map-section" class="btn-pink">Buka Peta</a>
-    </nav>
+
+    <!-- Ganti href ke nama file halaman peta kamu, misalnya peta.html -->
+    <a href="peta.html" class="btn-primary">
+      Eksplorasi Peta <i class="fa-solid fa-arrow-up-right-from-square"></i>
+    </a>
   </header>
 
-  <section class="hero" id="top">
-    <div>
-      <div class="loc-pill">Kawasan Perkotaan Tegalrejo, Kabupaten Magelang</div>
-      <h1>Satu Peta,<br/>Satu Data,<br/><span class="pink-italic">Untuk Tegalrejo</span></h1>
-      <p>Portal geospasial berbasis WebGIS untuk visualisasi informasi Penggunaan Lahan, Jaringan Jalan, dan Zona Nilai Tanah (ZNT) Kawasan Perkotaan Tegalrejo secara interaktif.</p>
-      <div class="hero-actions">
-        <a href="#map-section" class="btn-pink">Mulai Eksplorasi Peta &rarr;</a>
-        <a href="#map-section" class="btn-ghost">Buka Layer Peta</a>
+  <main class="hero">
+    <div class="hero-left">
+      <div class="badge-loc">
+        <i class="fa-solid fa-location-dot"></i> Kawasan Perkotaan Tegalrejo, Magelang
       </div>
-      <div class="hero-stats">
-        <div><strong>3+ Layer</strong><span>PL, Jalan, ZNT &amp; Fasilitas</span></div>
-        <div><strong>WGS 84</strong><span>EPSG:4326 GeoJSON</span></div>
-        <div><strong>100%</strong><span>Akses Online Publik</span></div>
+      <h1>Portal Informasi Spasial <span>Tegalrejo</span></h1>
+      <p>
+        Akses informasi tata ruang, pertanahan, dan sebaran fasilitas wilayah Kawasan Perkotaan Tegalrejo dalam satu tampilan peta interaktif.
+      </p>
+
+      <div class="cta-row">
+        <!-- Ganti href ke nama file halaman peta kamu -->
+        <a href="peta.html" class="btn-primary">
+          Eksplorasi Peta <i class="fa-solid fa-arrow-right"></i>
+        </a>
+        <span class="cta-note">Membuka halaman peta di tampilan terpisah</span>
+      </div>
+
+      <div class="feature-stack">
+        <div class="feature-pill">
+          <i class="fa-solid fa-layer-group"></i>
+          <div>
+            <strong>Layer Spasial Lengkap</strong>
+            <span>ZNT, lahan, jalan &amp; persil</span>
+          </div>
+        </div>
+        <div class="feature-pill">
+          <i class="fa-solid fa-camera"></i>
+          <div>
+            <strong>Popup Foto Lokasi</strong>
+            <span>Titik sekolah &amp; fasilitas</span>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Preview Card Ringkas di Kanan Hero -->
-    <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.12); border-radius:16px; padding:18px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; font-size:12px; color:#cbd5e1;">
-        <span>&#9679;&#9679;&#9679; WebGIS Tegalrejo</span>
-        <span style="background:rgba(16,185,129,0.18); color:#34d399; padding:3px 10px; border-radius:999px;">&#9679; Data Aktif</span>
+    <div class="hero-right">
+      <div class="mockup-window">
+        <div class="mockup-bar">
+          <div class="dots"><i></i><i></i><i></i></div>
+          <span>Pratinjau Portal Tegalrejo</span>
+          <span>GIS</span>
+        </div>
+        <div class="mockup-body">
+          <div class="mockup-side">
+            <div class="side-label">Layer Peta</div>
+            <div class="mock-item"><i class="fa-solid fa-check" style="color:#1d4ed8;"></i> Zona Nilai Tanah</div>
+            <div class="mock-item"><i class="fa-solid fa-check" style="color:#1d4ed8;"></i> Penggunaan Lahan</div>
+            <div class="mock-item"><i class="fa-solid fa-check" style="color:#1d4ed8;"></i> Jaringan Jalan</div>
+            <div class="mock-item"><i class="fa-solid fa-location-dot" style="color:#ef4444;"></i> Sekolah &amp; RS</div>
+          </div>
+          <div class="mockup-map">
+            <div class="zone-box zone-1"></div>
+            <div class="zone-box zone-2"></div>
+            <div class="pin-dot" style="top: 52px; left: 74px;"></div>
+            <div class="pin-dot" style="top: 105px; left: 162px;"></div>
+            <div class="pin-dot" style="top: 148px; left: 82px;"></div>
+          </div>
+        </div>
       </div>
-      <div style="height:210px; border-radius:12px; border:1px solid rgba(255,255,255,0.1); background-image:linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px); background-size:28px 28px; position:relative; padding:16px;">
-        <div style="width:76px; height:42px; border-radius:8px; background:#10b981; opacity:0.85; margin-bottom:18px;"></div>
-        <div style="width:64px; height:36px; border-radius:8px; background:#ec4899; opacity:0.85; position:absolute; top:24px; left:130px;"></div>
-        <div style="width:58px; height:34px; border-radius:8px; background:#db2777; opacity:0.75; position:absolute; top:86px; left:145px;"></div>
-        <div style="width:68px; height:34px; border-radius:8px; background:#6ee7b7; opacity:0.8; position:absolute; top:86px; left:40px;"></div>
-      </div>
-      <div style="display:flex; gap:14px; flex-wrap:wrap; margin-top:12px; font-size:11px; color:#cbd5e1;">
-        <span><i style="color:#10b981;">&#9679;</i> Penggunaan Lahan</span>
-        <span><i style="color:#ec4899;">&#9679;</i> Zona Nilai Tanah</span>
-        <span><i style="color:#38bdf8;">&#9679;</i> Fasilitas &amp; Jalan</span>
+
+      <div class="floating-stat">
+        <small>Ringkasan Wilayah</small>
+        <strong>Kawasan Perkotaan Tegalrejo</strong>
+        <div class="bar-mini">
+          <span style="height: 45%;"></span>
+          <span style="height: 75%;"></span>
+          <span style="height: 60%;"></span>
+          <span style="height: 90%;"></span>
+          <span style="height: 55%;"></span>
+        </div>
       </div>
     </div>
-  </section>
+  </main>
 
-  <!-- Bagian Peta Dashboard (Gaya Referensi Pertama) -->
-  <section id="map-section">
-    <aside class="map-sidebar">
-      <div class="map-sidebar-top">
-        <h2>Kontrol Layer Tegalrejo</h2>
-        <input type="text" id="filterLayerText" class="map-search" placeholder="Cari layer atau lokasi..." />
-      </div>
-      <div class="map-layers" id="layerList">
-        <div class="layer-group-label">Layer Utama</div>
-        <div class="layer-row">
-          <label><input type="checkbox" checked data-key="znt" /> Zona Nilai Tanah (ZNT)</label>
-          <span class="swatch" style="background:#ec4899;"></span>
-        </div>
-        <div class="layer-row">
-          <label><input type="checkbox" checked data-key="lahan" /> Penggunaan Lahan (PL)</label>
-          <span class="swatch" style="background:#10b981;"></span>
-        </div>
-        <div class="layer-row">
-          <label><input type="checkbox" checked data-key="jalan" /> Jaringan Jalan</label>
-          <span class="swatch" style="background:#f59e0b;"></span>
-        </div>
-
-        <div class="layer-group-label">Data Pendukung</div>
-        <div class="layer-row">
-          <label><input type="checkbox" data-key="persil" /> Bidang Persil</label>
-          <span class="swatch" style="background:#3b82f6;"></span>
-        </div>
-        <div class="layer-row">
-          <label><input type="checkbox" checked data-key="fasilitas" /> Titik Sekolah &amp; RS</label>
-          <span class="swatch" style="background:#8b5cf6;"></span>
-        </div>
-      </div>
-    </aside>
-
-    <div id="tegalrejo-map"></div>
-
-    <div class="right-widgets">
-      <div class="widget-box">
-        <h3>Proporsi Penggunaan Lahan</h3>
-        <canvas id="plMiniChart" height="120"></canvas>
-      </div>
-      <div class="widget-box">
-        <h3>Kelas Zona Nilai Tanah</h3>
-        <canvas id="zntMiniChart" height="105"></canvas>
-      </div>
-    </div>
-
-    <div class="floating-zoom">
-      <button id="btnZoomIn" title="Perbesar"><i class="fa-solid fa-plus"></i></button>
-      <button id="btnZoomOut" title="Perkecil"><i class="fa-solid fa-minus"></i></button>
-      <button id="btnSatToggle" title="Ganti Basemap"><i class="fa-solid fa-earth-asia"></i></button>
-    </div>
-  </section>
-
-  <script>
-    const map = L.map('tegalrejo-map', { zoomControl: false }).setView([-7.4685, 110.2765], 14);
-    const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Esri' }).addTo(map);
-    const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: 'OSM' });
-    let usingSat = true;
-
-    document.getElementById('btnZoomIn').onclick = () => map.zoomIn();
-    document.getElementById('btnZoomOut').onclick = () => map.zoomOut();
-    document.getElementById('btnSatToggle').onclick = () => {
-      if (usingSat) { map.removeLayer(sat); osm.addTo(map); }
-      else { map.removeLayer(osm); sat.addTo(map); }
-      usingSat = !usingSat;
-    };
-
-    const layerGroups = {
-      znt: L.layerGroup().addTo(map),
-      lahan: L.layerGroup().addTo(map),
-      jalan: L.layerGroup().addTo(map),
-      persil: L.layerGroup(),
-      fasilitas: L.layerGroup().addTo(map)
-    };
-
-    document.querySelectorAll('#layerList input[type="checkbox"]').forEach(chk => {
-      chk.addEventListener('change', e => {
-        const grp = layerGroups[e.target.dataset.key];
-        if (e.target.checked) grp.addTo(map);
-        else map.removeLayer(grp);
-      });
-    });
-
-    document.getElementById('filterLayerText').addEventListener('input', e => {
-      const q = e.target.value.toLowerCase();
-      document.querySelectorAll('#layerList .layer-row').forEach(row => {
-        row.style.display = row.textContent.toLowerCase().includes(q) ? 'flex' : 'none';
-      });
-    });
-
-    new Chart(document.getElementById('plMiniChart'), {
-      type: 'doughnut',
-      data: {
-        labels: ['Permukiman', 'Sawah', 'Tegalan'],
-        datasets: [{ data: [40, 40, 20], backgroundColor: ['#ec4899', '#10b981', '#f59e0b'], borderWidth: 0 }]
-      },
-      options: { plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } } }, cutout: '60%' }
-    });
-
-    new Chart(document.getElementById('zntMiniChart'), {
-      type: 'bar',
-      data: {
-        labels: ['Rendah', 'Sedang', 'Tinggi'],
-        datasets: [{ data: [18, 26, 12], backgroundColor: '#ec4899', borderRadius: 5 }]
-      },
-      options: { plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { font: { size: 10 } } }, y: { ticks: { font: { size: 10 } } } } }
-    });
-  </script>
 </body>
 </html>
