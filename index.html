@@ -317,7 +317,7 @@
       margin-top: 2px;
     }
 
-    /* Mode Fullscreen Peta (Saat Dipindah ke Peta Interaktif) */
+    /* Mode Fullscreen Peta */
     #map-view {
       height: calc(100vh - 64px);
       width: 100%;
@@ -355,7 +355,7 @@
       border-radius: 8px;
       border: 1px solid rgba(236, 72, 153, 0.25);
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.22);
-      max-height: 300px;
+      max-height: 320px;
       overflow-y: auto;
       font-size: 11.5px;
       color: #14261f;
@@ -405,15 +405,15 @@
     <button id="nav-cta" class="btn-pill" onclick="bukaView('map')">Buka Peta</button>
   </nav>
 
-  <!-- Halaman / Layer 1: Beranda -->
+  <!-- Halaman 1: Beranda -->
   <section id="home-view" class="hero">
     <div class="hero-grid">
       <div>
         <div class="badge-loc">Kawasan Perkotaan Tegalrejo, Kabupaten Magelang</div>
         <h1>Satu Peta,<br />Satu Data,<br /><span class="accent-pink">Untuk Tegalrejo</span></h1>
         <p>
-          Portal geospasial berbasis WebGIS untuk visualisasi informasi Penggunaan Lahan dan Jaringan Jalan
-          Kawasan Perkotaan Tegalrejo secara interaktif, lengkap dengan legenda tematik dan informasi atribut tiap fitur.
+          Portal geospasial berbasis WebGIS untuk visualisasi informasi Penggunaan Lahan, Jaringan Jalan,
+          dan Zona Nilai Tanah (ZNT) Kawasan Perkotaan Tegalrejo secara interaktif.
         </p>
         <div class="hero-actions">
           <button class="btn-primary" onclick="bukaView('map')">Mulai Eksplorasi Peta &rarr;</button>
@@ -443,7 +443,7 @@
 
         <div class="preview-legend">
           <span><i class="leg-dot" style="background:#10b981;"></i>RTH / Kebun</span>
-          <span><i class="leg-dot" style="background:#f472b6;"></i>Zona Utama</span>
+          <span><i class="leg-dot" style="background:#f472b6;"></i>Zona Nilai Tanah</span>
           <span><i class="leg-dot" style="background:#6ee7b7;"></i>Ruang Terbuka</span>
           <span><i class="leg-dot" style="background:#ec4899;"></i>Jaringan Jalan</span>
         </div>
@@ -452,8 +452,8 @@
 
     <div class="stats-bar">
       <div>
-        <div class="stat-num">2 Layer</div>
-        <div class="stat-label">Penggunaan Lahan &amp; Jalan</div>
+        <div class="stat-num">3 Layer</div>
+        <div class="stat-label">PL, Jalan &amp; ZNT</div>
       </div>
       <div>
         <div class="stat-num">WGS 84</div>
@@ -466,7 +466,7 @@
     </div>
   </section>
 
-  <!-- Halaman / Layer 2: Peta Interaktif Fullscreen -->
+  <!-- Halaman 2: Peta Interaktif Fullscreen -->
   <section id="map-view" class="hidden-view">
     <div id="map"></div>
   </section>
@@ -553,6 +553,16 @@
       return { color: '#334155', weight: 1.4, opacity: 0.85 };
     }
 
+    function getWarnaZNT(nilai) {
+      if (!nilai) return '#cbd5e1';
+      const n = String(nilai).replace(/\s+/g, '').toLowerCase();
+      if (n.includes('100.000-200.000') || n.includes('100000-200000')) return '#fde047';
+      if (n.includes('200.000-500.000') || n.includes('200000-500000')) return '#f59e0b';
+      if (n.includes('500.000-1.000.000') || n.includes('500.000-1.000') || n.includes('500000-1000000')) return '#f472b6';
+      if (n.includes('1.000.000-2.000.000') || n.includes('1.000.000-2.00') || n.includes('1000000-2000000')) return '#db2777';
+      return '#9d174d';
+    }
+
     function buatPopup(feature, layer, judul) {
       if (!feature.properties) return;
       let rows = '';
@@ -595,6 +605,23 @@
         }).addTo(map);
 
         layerControl.addOverlay(layerJalan, 'Jaringan Jalan');
+        return fetch('znt_tegalrejo.geojson');
+      })
+      .then(function(res) { return res.json(); })
+      .then(function(dataZNT) {
+        const layerZNT = L.geoJSON(dataZNT, {
+          style: function(feature) {
+            return {
+              fillColor: getWarnaZNT(feature.properties && feature.properties.Nilai_Laha),
+              color: '#831843',
+              weight: 0.8,
+              fillOpacity: 0.65
+            };
+          },
+          onEachFeature: function(feature, layer) { buatPopup(feature, layer, 'Zona Nilai Tanah (ZNT)'); }
+        }).addTo(map);
+
+        layerControl.addOverlay(layerZNT, 'Zona Nilai Tanah (ZNT)');
       })
       .catch(function(err) { console.error(err); });
 
@@ -602,6 +629,12 @@
     legend.onAdd = function() {
       const div = L.DomUtil.create('div', 'legend-box');
       div.innerHTML =
+        '<h4>Zona Nilai Tanah (ZNT)</h4>' +
+        '<div class="legend-item"><span class="swatch-poly" style="background:#fde047;"></span>100.000 - 200.000</div>' +
+        '<div class="legend-item"><span class="swatch-poly" style="background:#f59e0b;"></span>200.000 - 500.000</div>' +
+        '<div class="legend-item"><span class="swatch-poly" style="background:#f472b6;"></span>500.000 - 1.000.000</div>' +
+        '<div class="legend-item"><span class="swatch-poly" style="background:#db2777;"></span>1.000.000 - 2.000.000</div>' +
+        '<div class="legend-item"><span class="swatch-poly" style="background:#9d174d;"></span>&gt; 2.000.000</div>' +
         '<h4>Jaringan Jalan</h4>' +
         '<div class="legend-item"><span class="swatch-line" style="border-top:4px solid #dc2626;"></span>Jalan Arteri</div>' +
         '<div class="legend-item"><span class="swatch-line" style="border-top:3px solid #f97316;"></span>Jalan Kolektor</div>' +
