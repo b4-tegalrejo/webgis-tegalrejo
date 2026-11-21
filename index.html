@@ -53,38 +53,31 @@
       user-select: none;
     }
 
-    .brand-badges {
+    .brand-logos {
       display: flex;
       align-items: center;
       gap: 6px;
     }
 
-    .badge-emblem {
-      width: 38px;
-      height: 38px;
-      border-radius: 10px;
-      background: rgba(181, 211, 68, 0.16);
-      border: 1.5px solid #b5d344;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 900;
-      font-size: 12px;
-      color: #ecfccb;
+    .logo-img {
+      height: 40px;
+      width: auto;
+      max-width: 48px;
+      object-fit: contain;
     }
 
-    .badge-t {
-      width: 38px;
-      height: 38px;
+    .badge-fallback {
+      width: 36px;
+      height: 36px;
       border-radius: 999px;
-      background: #ffffff;
-      color: #0b193d;
-      border: 2px solid #9ca3af;
-      display: flex;
+      background: rgba(181, 211, 68, 0.16);
+      border: 1.5px solid #b5d344;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
       font-weight: 900;
-      font-size: 18px;
+      font-size: 13px;
+      color: #ecfccb;
     }
 
     .brand-sub {
@@ -201,19 +194,19 @@
       transform: translateY(-2px);
     }
 
-    /* Visual Kanan: Mockup HP dari foto-hp.jpg */
+    /* Visual Kanan: Mockup HP */
     .phone-showcase {
       position: relative;
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 380px;
+      min-height: 360px;
     }
 
     .phone-photo-wrap {
       position: relative;
       width: 100%;
-      max-width: 520px;
+      max-width: 500px;
       border-radius: 20px;
       overflow: hidden;
     }
@@ -223,6 +216,28 @@
       height: auto;
       display: block;
       mix-blend-mode: lighten;
+    }
+
+    .phone-card-fallback {
+      width: 100%;
+      max-width: 310px;
+      margin: 0 auto;
+      background: #0d1326;
+      border: 2px solid rgba(181, 211, 68, 0.45);
+      border-radius: 28px;
+      padding: 16px;
+      box-shadow: 0 20px 44px rgba(0, 0, 0, 0.45);
+    }
+
+    .phone-map-area {
+      background: linear-gradient(145deg, #1d3b2f 0%, #13253d 60%, #2a1d3e 100%);
+      border-radius: 18px;
+      min-height: 220px;
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border: 1px solid rgba(181, 211, 68, 0.28);
     }
 
     .layer-chip {
@@ -503,9 +518,22 @@
   <!-- Navigasi Atas -->
   <nav class="navbar">
     <div class="brand" onclick="bukaView('home')">
-      <div class="brand-badges">
-        <div class="badge-emblem">MGL</div>
-        <div class="badge-t">T</div>
+      <div class="brand-logos">
+        <img
+          src="logo-kab.png"
+          alt="Logo Kabupaten Magelang"
+          class="logo-img"
+          onerror="this.style.display='none'; document.getElementById('fb-kab').style.display='inline-flex';"
+        />
+        <span id="fb-kab" class="badge-fallback" style="display:none;">MGL</span>
+
+        <img
+          src="logo-kelompok.png"
+          alt="Logo Kelompok"
+          class="logo-img"
+          onerror="this.style.display='none'; document.getElementById('fb-grp').style.display='inline-flex';"
+        />
+        <span id="fb-grp" class="badge-fallback" style="display:none;">T</span>
       </div>
       <div>
         <span class="brand-sub">Sistem Informasi Geospasial</span>
@@ -541,14 +569,25 @@
       <div class="phone-showcase">
         <div class="phone-photo-wrap">
           <img
-            src="foto-hp.jpg"
+            src="foto-hp.png"
             alt="Preview WebGIS Desa Tegalrejo"
             class="phone-photo-img"
-            onerror="this.style.display='none';"
+            onerror="this.style.display='none'; document.getElementById('hp-fallback').style.display='block';"
           />
           <span class="layer-chip chip-fasilitas">Persebaran Fasilitas</span>
           <span class="layer-chip chip-pl">Penggunaan Lahan</span>
           <span class="layer-chip chip-znt">Zona Nilai Tanah</span>
+        </div>
+
+        <div id="hp-fallback" class="phone-card-fallback" style="display:none;">
+          <div class="phone-map-area">
+            <span class="layer-chip" style="position:static; margin-bottom:8px;">Persebaran Fasilitas</span>
+            <span class="layer-chip" style="position:static; align-self:flex-end; margin-bottom:8px;">Penggunaan Lahan</span>
+            <span class="layer-chip" style="position:static;">Zona Nilai Tanah</span>
+          </div>
+          <p style="font-size:11.5px; color:#cbd5e1; text-align:center; margin-top:10px; line-height:1.45;">
+            Letakkan <code>foto-hp.png</code> di folder yang sama dengan <code>index.html</code> agar tampil penuh.
+          </p>
         </div>
       </div>
     </div>
@@ -638,10 +677,12 @@
       if (tujuan === 'map') {
         homeView.classList.add('hidden-view');
         mapView.classList.remove('hidden-view');
-        navHome.classList.remove('active');
-        navMap.classList.add('active');
-        navCta.textContent = '← Beranda';
-        navCta.setAttribute('onclick', "bukaView('home')");
+        if (navHome) navHome.classList.remove('active');
+        if (navMap) navMap.classList.add('active');
+        if (navCta) {
+          navCta.textContent = '← Beranda';
+          navCta.setAttribute('onclick', "bukaView('home')");
+        }
 
         setTimeout(function() {
           map.invalidateSize();
@@ -653,10 +694,12 @@
       } else {
         mapView.classList.add('hidden-view');
         homeView.classList.remove('hidden-view');
-        navMap.classList.remove('active');
-        navHome.classList.add('active');
-        navCta.textContent = 'Buka Peta';
-        navCta.setAttribute('onclick', "bukaView('map')");
+        if (navMap) navMap.classList.remove('active');
+        if (navHome) navHome.classList.add('active');
+        if (navCta) {
+          navCta.textContent = 'Buka Peta';
+          navCta.setAttribute('onclick', "bukaView('map')");
+        }
       }
       window.scrollTo(0, 0);
     }
