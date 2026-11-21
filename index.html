@@ -69,7 +69,7 @@
       align-items: center;
       justify-content: center;
       font-weight: 900;
-      font-size: 13px;
+      font-size: 12px;
       color: #ecfccb;
     }
 
@@ -135,7 +135,7 @@
     /* Halaman Katalog / Beranda */
     .catalog-hero {
       min-height: calc(100vh - 70px);
-      padding: 36px 5% 28px;
+      padding: 32px 5% 26px;
       background:
         radial-gradient(circle at 78% 45%, rgba(56, 189, 248, 0.12), transparent 44%),
         radial-gradient(circle at 15% 25%, rgba(181, 211, 68, 0.08), transparent 42%),
@@ -143,13 +143,13 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      gap: 28px;
+      gap: 24px;
     }
 
     .hero-grid {
       display: grid;
-      grid-template-columns: 1.15fr 0.85fr;
-      gap: 36px;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 28px;
       align-items: center;
       margin: auto 0;
     }
@@ -160,7 +160,7 @@
       line-height: 1.08;
       letter-spacing: -0.02em;
       color: #ffffff;
-      margin-bottom: 22px;
+      margin-bottom: 20px;
     }
 
     .desc-box {
@@ -172,7 +172,7 @@
       font-weight: 500;
       line-height: 1.55;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
-      margin-bottom: 34px;
+      margin-bottom: 32px;
     }
 
     .cta-row {
@@ -180,7 +180,7 @@
       flex-wrap: wrap;
       align-items: center;
       gap: 16px;
-      padding-left: 24px;
+      padding-left: 20px;
     }
 
     .btn-eksplor {
@@ -201,80 +201,51 @@
       transform: translateY(-2px);
     }
 
-    /* Mockup Katalog di Sisi Kanan */
+    /* Visual Kanan: Mockup HP dari foto-hp.jpg */
     .phone-showcase {
+      position: relative;
       display: flex;
       justify-content: center;
       align-items: center;
-      position: relative;
+      min-height: 380px;
     }
 
-    .phone-frame {
+    .phone-photo-wrap {
+      position: relative;
       width: 100%;
-      max-width: 315px;
-      background: #0d1326;
-      border: 3px solid #475569;
-      border-radius: 34px;
-      padding: 14px;
-      box-shadow: 0 24px 50px rgba(0, 0, 0, 0.55);
-      position: relative;
-    }
-
-    .phone-search {
-      background: #ffffff;
-      color: #111827;
-      border-radius: 999px;
-      padding: 8px 14px;
-      font-size: 12px;
-      font-weight: 600;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-
-    .phone-map-card {
-      background: linear-gradient(150deg, #1e3a2f 0%, #13243b 60%, #2a1f3d 100%);
+      max-width: 520px;
       border-radius: 20px;
-      padding: 18px 14px;
-      min-height: 250px;
-      position: relative;
-      border: 1px solid rgba(181, 211, 68, 0.3);
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
+      overflow: hidden;
     }
 
-    .layer-tag {
-      display: inline-block;
+    .phone-photo-img {
+      width: 100%;
+      height: auto;
+      display: block;
+      mix-blend-mode: lighten;
+    }
+
+    .layer-chip {
+      position: absolute;
       background: #ffffff;
       color: #111827;
       font-size: 11.5px;
       font-weight: 700;
       padding: 5px 12px;
       border-radius: 999px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
-      margin-bottom: 8px;
-      width: fit-content;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+      pointer-events: none;
     }
 
-    .phone-footer {
-      margin-top: 10px;
-      padding: 10px 12px;
-      background: #111827;
-      border-radius: 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 11px;
-      color: #e2e8f0;
-    }
+    .chip-fasilitas { top: 34%; left: 32%; }
+    .chip-pl { top: 28%; right: 4%; }
+    .chip-znt { bottom: 32%; right: 6%; }
 
     .stats-bar {
       display: flex;
       flex-wrap: wrap;
       gap: 64px;
-      padding-left: 24px;
+      padding-left: 20px;
       padding-top: 8px;
     }
 
@@ -504,6 +475,9 @@
       .nav-links {
         display: none;
       }
+      .layer-chip {
+        display: none;
+      }
       .cta-row,
       .stats-bar {
         padding-left: 0;
@@ -565,22 +539,16 @@
       </div>
 
       <div class="phone-showcase">
-        <div class="phone-frame">
-          <div class="phone-search">
-            <span>Desa Tegalrejo, Magelang</span>
-            <span>&#10005;</span>
-          </div>
-
-          <div class="phone-map-card">
-            <span class="layer-tag">Persebaran Fasilitas</span>
-            <span class="layer-tag" style="align-self: flex-end;">Penggunaan Lahan</span>
-            <span class="layer-tag">Zona Nilai Tanah</span>
-          </div>
-
-          <div class="phone-footer">
-            <strong>Tegalrejo</strong>
-            <span>GeoJSON Multi-Layer</span>
-          </div>
+        <div class="phone-photo-wrap">
+          <img
+            src="foto-hp.jpg"
+            alt="Preview WebGIS Desa Tegalrejo"
+            class="phone-photo-img"
+            onerror="this.style.display='none';"
+          />
+          <span class="layer-chip chip-fasilitas">Persebaran Fasilitas</span>
+          <span class="layer-chip chip-pl">Penggunaan Lahan</span>
+          <span class="layer-chip chip-znt">Zona Nilai Tanah</span>
         </div>
       </div>
     </div>
