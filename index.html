@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Portal WebGIS Kawasan Perkotaan Tegalrejo — Kabupaten Magelang</title>
+  <title>Portal WebGIS Desa Tegalrejo — Kabupaten Magelang</title>
 
   <!-- Google Fonts & Leaflet CSS -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
   <style>
@@ -20,8 +20,8 @@
 
     body {
       font-family: 'Inter', sans-serif;
-      background: #0b1f18;
-      color: #f4fbf7;
+      background: #141938;
+      color: #ffffff;
       min-height: 100vh;
       overflow-x: hidden;
     }
@@ -30,19 +30,19 @@
       display: none !important;
     }
 
-    /* Navbar Hijau & Pink */
+    /* Navbar Biru Tua dengan Garis Aksen Hijau */
     .navbar {
       position: sticky;
       top: 0;
       z-index: 2000;
-      height: 64px;
+      min-height: 68px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0 5%;
-      background: rgba(11, 31, 24, 0.95);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid rgba(167, 243, 208, 0.16);
+      padding: 8px 4%;
+      background: linear-gradient(90deg, #0d1636 0%, #16224c 55%, #0d1636 100%);
+      border-bottom: 2px solid #84cc16;
+      gap: 16px;
     }
 
     .brand {
@@ -50,281 +50,210 @@
       align-items: center;
       gap: 10px;
       text-decoration: none;
-      color: #f4fbf7;
+      color: #ffffff;
       cursor: pointer;
     }
 
-    .brand-icon {
-      width: 34px;
-      height: 34px;
-      border-radius: 50%;
-      background: rgba(244, 114, 182, 0.18);
-      border: 1px solid rgba(244, 114, 182, 0.55);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      color: #f9a8d4;
+    .brand-logo-img {
+      height: 44px;
+      width: auto;
+      object-fit: contain;
+      border-radius: 6px;
     }
 
     .brand-sub {
       font-size: 11px;
-      color: #a7f3d0;
+      color: #e2e8f0;
       display: block;
+      font-weight: 500;
     }
 
     .brand-title {
-      font-size: 15px;
-      font-weight: 700;
+      font-size: 17px;
+      font-weight: 800;
       letter-spacing: 0.2px;
+      color: #ffffff;
     }
 
-    .nav-links {
+    .nav-center {
       display: flex;
-      gap: 24px;
+      align-items: center;
+      gap: 18px;
       list-style: none;
     }
 
-    .nav-links a {
-      color: #d1fae5;
-      text-decoration: none;
-      font-size: 13.5px;
-      font-weight: 500;
-      transition: color 0.2s;
-      cursor: pointer;
-    }
-
-    .nav-links a:hover,
-    .nav-links a.active {
-      color: #f472b6;
-    }
-
-    .btn-pill {
-      background: #f472b6;
+    .nav-pill-btn {
+      background: linear-gradient(180deg, #9ca3af 0%, #6b7280 48%, #374151 52%, #1f2937 100%);
       color: #ffffff;
-      border: none;
-      padding: 9px 18px;
+      border: 1px solid #d1d5db;
+      padding: 6px 24px;
       border-radius: 999px;
-      font-weight: 700;
       font-size: 13px;
+      font-weight: 700;
+      font-style: italic;
       cursor: pointer;
-      transition: transform 0.15s, background 0.2s;
-      box-shadow: 0 6px 18px rgba(244, 114, 182, 0.32);
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.55);
+      transition: transform 0.15s, filter 0.2s;
     }
 
-    .btn-pill:hover {
-      background: #ec4899;
+    .nav-pill-btn:hover,
+    .nav-pill-btn.active {
+      filter: brightness(1.12);
+      transform: translateY(-1px);
+      border-color: #bef264;
+    }
+
+    .nav-right-cta {
+      background: linear-gradient(180deg, #9ca3af 0%, #6b7280 48%, #374151 52%, #1f2937 100%);
+      color: #ffffff;
+      border: 1px solid #d1d5db;
+      padding: 6px 22px;
+      border-radius: 999px;
+      font-size: 12.5px;
+      font-weight: 700;
+      font-style: italic;
+      cursor: pointer;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+      transition: transform 0.15s, filter 0.2s;
+    }
+
+    .nav-right-cta:hover {
+      filter: brightness(1.12);
       transform: translateY(-1px);
     }
 
-    /* Hero Section */
+    /* Hero Katalog Desa Tegalrejo */
     .hero {
-      min-height: calc(100vh - 64px);
-      padding: 40px 5% 32px;
-      background-image:
-        radial-gradient(circle at 82% 22%, rgba(244, 114, 182, 0.16), transparent 42%),
-        radial-gradient(circle at 15% 80%, rgba(16, 185, 129, 0.18), transparent 45%),
-        linear-gradient(135deg, rgba(10, 27, 21, 0.96) 0%, rgba(17, 45, 35, 0.92) 60%, rgba(10, 27, 21, 0.97) 100%),
-        linear-gradient(to right, rgba(167, 243, 208, 0.06) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(167, 243, 208, 0.06) 1px, transparent 1px);
-      background-size: 100% 100%, 100% 100%, 100% 100%, 48px 48px, 48px 48px;
+      min-height: calc(100vh - 68px);
+      padding: 28px 5% 24px;
+      background:
+        radial-gradient(circle at 78% 45%, rgba(56, 189, 248, 0.12), transparent 45%),
+        radial-gradient(circle at 18% 25%, rgba(163, 230, 53, 0.08), transparent 40%),
+        linear-gradient(135deg, #1b1e42 0%, #151936 52%, #1c1f44 100%);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      gap: 28px;
+      gap: 20px;
     }
 
     .hero-grid {
       display: grid;
       grid-template-columns: 1.15fr 0.95fr;
-      gap: 36px;
+      gap: 32px;
       align-items: center;
       margin: auto 0;
     }
 
-    .badge-loc {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      background: rgba(244, 114, 182, 0.15);
-      border: 1px solid rgba(244, 114, 182, 0.45);
-      color: #fbcfe8;
-      padding: 6px 14px;
-      border-radius: 999px;
-      font-size: 12.5px;
-      font-weight: 600;
-      margin-bottom: 18px;
-    }
-
     .hero h1 {
-      font-family: 'Playfair Display', serif;
-      font-size: clamp(2.4rem, 4.6vw, 4rem);
-      line-height: 1.08;
+      font-size: clamp(2.5rem, 4.8vw, 4.35rem);
+      font-weight: 900;
+      line-height: 1.06;
+      letter-spacing: -0.02em;
       color: #ffffff;
-      margin-bottom: 18px;
+      margin-bottom: 22px;
     }
 
-    .hero h1 span.accent-pink {
-      color: #f472b6;
+    .desc-highlight {
+      background: #c8d96e;
+      color: #111827;
+      padding: 12px 16px;
+      max-width: 500px;
+      font-size: 13.5px;
+      font-weight: 500;
+      line-height: 1.52;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+      margin-bottom: 34px;
     }
 
-    .hero p {
-      color: #bbf7d0;
-      font-size: 15px;
-      line-height: 1.7;
-      max-width: 540px;
-      margin-bottom: 26px;
+    .hero-cta-wrap {
+      padding-left: 58px;
     }
 
-    .hero-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 14px;
-    }
-
-    .btn-primary {
-      background: #f472b6;
-      color: #ffffff;
-      border: 1px solid #f9a8d4;
-      padding: 13px 22px;
-      border-radius: 12px;
-      font-weight: 700;
-      font-size: 14px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      box-shadow: 0 10px 26px rgba(244, 114, 182, 0.35);
-      transition: transform 0.15s, background 0.2s;
-    }
-
-    .btn-primary:hover {
-      background: #ec4899;
-      transform: translateY(-1px);
-    }
-
-    .btn-secondary {
-      background: #132e24;
-      color: #d1fae5;
-      border: 1px solid rgba(110, 231, 183, 0.28);
-      padding: 13px 20px;
-      border-radius: 12px;
-      font-weight: 600;
-      font-size: 14px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      transition: background 0.2s, border-color 0.2s;
-    }
-
-    .btn-secondary:hover {
-      background: #1a3d30;
-      border-color: rgba(244, 114, 182, 0.45);
-    }
-
-    /* Kartu Preview Hero */
-    .preview-window {
-      position: relative;
-      background: #112921;
-      border: 1px solid rgba(244, 114, 182, 0.32);
-      border-radius: 16px;
-      padding: 16px;
-      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
-    }
-
-    .window-top {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      margin-bottom: 14px;
-      font-size: 12px;
-      color: #a7f3d0;
-    }
-
-    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-    .dot-r { background: #f472b6; }
-    .dot-y { background: #fbcfe8; }
-    .dot-g { background: #34d399; }
-
-    .preview-canvas {
-      height: 250px;
-      border-radius: 12px;
-      background:
-        linear-gradient(to right, rgba(167, 243, 208, 0.11) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(167, 243, 208, 0.11) 1px, transparent 1px),
-        #0b1d17;
-      background-size: 28px 28px;
-      position: relative;
-      overflow: hidden;
-      border: 1px solid rgba(52, 211, 153, 0.22);
-    }
-
-    .mock-block {
-      position: absolute;
-      border-radius: 8px;
-      opacity: 0.88;
-    }
-    .b1 { width: 92px; height: 58px; top: 36px; left: 32px; background: #10b981; }
-    .b2 { width: 76px; height: 52px; top: 44px; left: 142px; background: #f472b6; }
-    .b3 { width: 88px; height: 48px; top: 118px; left: 56px; background: #6ee7b7; }
-    .b4 { width: 70px; height: 46px; top: 126px; left: 168px; background: #ec4899; }
-    .b5 { width: 14px; height: 14px; border-radius: 50%; top: 72px; right: 54px; background: #fbcfe8; }
-
-    .floating-chip {
-      position: absolute;
-      background: rgba(15, 36, 29, 0.95);
-      border: 1px solid rgba(244, 114, 182, 0.4);
-      padding: 6px 12px;
+    .btn-eksplor {
+      background: linear-gradient(180deg, #b8c2b0 0%, #7d8779 48%, #485046 52%, #2c312b 100%);
+      color: #111827;
+      border: 2px solid #d9e2d2;
+      padding: 13px 46px;
       border-radius: 999px;
-      font-size: 11.5px;
-      font-weight: 600;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+      font-size: 21px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow:
+        0 10px 26px rgba(0, 0, 0, 0.45),
+        inset 0 2px 3px rgba(255, 255, 255, 0.75);
+      transition: transform 0.15s, filter 0.2s;
     }
 
-    .chip-top { top: 26px; right: -8px; color: #6ee7b7; }
-    .chip-left { bottom: 48px; left: -10px; color: #f9a8d4; }
+    .btn-eksplor:hover {
+      filter: brightness(1.08);
+      transform: translateY(-2px);
+    }
 
-    .preview-legend {
+    /* Visual Kanan (Mockup HP + Fallback jika gambar belum diupload) */
+    .visual-showcase {
       display: flex;
-      flex-wrap: wrap;
-      gap: 14px;
-      margin-top: 12px;
-      font-size: 11.5px;
-      color: #d1fae5;
-    }
-
-    .preview-legend span {
-      display: inline-flex;
+      justify-content: center;
       align-items: center;
-      gap: 6px;
+      position: relative;
     }
 
-    .leg-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .mockup-hp-img {
+      width: 100%;
+      max-width: 470px;
+      height: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 22px 40px rgba(0, 0, 0, 0.55));
+      border-radius: 24px;
+    }
 
+    .mockup-fallback {
+      width: 100%;
+      max-width: 390px;
+      background: #101730;
+      border: 2px solid rgba(163, 230, 53, 0.4);
+      border-radius: 24px;
+      padding: 18px;
+      text-align: center;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
+    }
+
+    .mockup-fallback p {
+      font-size: 12.5px;
+      color: #cbd5e1;
+      line-height: 1.5;
+      margin-top: 8px;
+    }
+
+    /* Footer Bawah Katalog */
     .stats-bar {
-      display: grid;
-      grid-template-columns: repeat(3, max-content);
-      gap: 44px;
-      padding-top: 12px;
-      border-top: 1px solid rgba(167, 243, 208, 0.16);
+      display: flex;
+      justify-content: flex-start;
+      gap: 72px;
+      padding-left: 36px;
+      padding-top: 8px;
+    }
+
+    .stat-item {
+      text-align: center;
     }
 
     .stat-num {
-      font-size: 1.65rem;
-      font-weight: 800;
-      color: #f9a8d4;
+      font-size: 1.55rem;
+      font-weight: 900;
+      color: #ffffff;
+      line-height: 1.15;
     }
 
     .stat-label {
       font-size: 12px;
-      color: #a7f3d0;
+      color: #e2e8f0;
+      font-weight: 500;
       margin-top: 2px;
     }
 
     /* Layout Dashboard: Peta + Panel Samping */
     #map-view {
-      height: calc(100vh - 64px);
+      height: calc(100vh - 68px);
       width: 100%;
       display: grid;
       grid-template-columns: 1fr 350px;
@@ -346,7 +275,7 @@
 
     .side-dashboard {
       background: #10261e;
-      border-left: 1px solid rgba(244, 114, 182, 0.28);
+      border-left: 1px solid rgba(163, 230, 53, 0.28);
       padding: 16px;
       overflow-y: auto;
       display: flex;
@@ -366,7 +295,7 @@
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.4px;
-      color: #f9a8d4;
+      color: #bef264;
       margin-bottom: 10px;
       display: flex;
       justify-content: space-between;
@@ -427,7 +356,7 @@
     .bar-fill {
       height: 100%;
       border-radius: 999px;
-      background: linear-gradient(90deg, #34d399, #f472b6);
+      background: linear-gradient(90deg, #84cc16, #38bdf8);
       width: 0%;
       transition: width 0.35s ease;
     }
@@ -452,7 +381,7 @@
     }
 
     .inspect-table td:first-child {
-      color: #f9a8d4;
+      color: #bef264;
       font-weight: 600;
       width: 42%;
     }
@@ -461,7 +390,7 @@
     .leaflet-control-layers {
       background: rgba(15, 36, 29, 0.94) !important;
       color: #f4fbf7 !important;
-      border: 1px solid rgba(244, 114, 182, 0.4) !important;
+      border: 1px solid rgba(163, 230, 53, 0.4) !important;
       border-radius: 10px !important;
       padding: 8px 12px !important;
       font-size: 13px !important;
@@ -503,18 +432,19 @@
 
     @media (max-width: 960px) {
       .hero-grid { grid-template-columns: 1fr; }
-      .nav-links { display: none; }
-      .stats-bar { grid-template-columns: repeat(3, 1fr); gap: 16px; }
+      .nav-center { display: none; }
+      .hero-cta-wrap { padding-left: 0; }
+      .stats-bar { padding-left: 0; gap: 28px; flex-wrap: wrap; }
       #map-view {
         grid-template-columns: 1fr;
         grid-template-rows: 58vh auto;
         height: auto;
-        min-height: calc(100vh - 64px);
+        min-height: calc(100vh - 68px);
         overflow: visible;
       }
       .side-dashboard {
         border-left: none;
-        border-top: 1px solid rgba(244, 114, 182, 0.28);
+        border-top: 1px solid rgba(163, 230, 53, 0.28);
         overflow-y: visible;
       }
     }
@@ -525,76 +455,67 @@
   <!-- Navigasi Atas -->
   <nav class="navbar">
     <a class="brand" onclick="bukaView('home')">
-      <div class="brand-icon">TR</div>
+      <img
+        src="logo-tegalrejo.png"
+        alt="Logo Desa Tegalrejo"
+        class="brand-logo-img"
+        onerror="this.style.display='none';"
+      />
       <div>
         <span class="brand-sub">Sistem Informasi Geospasial</span>
-        <span class="brand-title">Tegalrejo</span>
+        <span class="brand-title">Desa Tegalrejo</span>
       </div>
     </a>
 
-    <ul class="nav-links">
-      <li><a id="nav-home" class="active" onclick="bukaView('home')">Beranda</a></li>
-      <li><a id="nav-map" onclick="bukaView('map')">Peta Interaktif</a></li>
+    <ul class="nav-center">
+      <li><button id="nav-home" class="nav-pill-btn active" onclick="bukaView('home')">Beranda</button></li>
+      <li><button id="nav-map" class="nav-pill-btn" onclick="bukaView('map')">Peta Interaktif</button></li>
     </ul>
 
-    <button id="nav-cta" class="btn-pill" onclick="bukaView('map')">Buka Peta</button>
+    <button id="nav-cta" class="nav-right-cta" onclick="bukaView('home')">Beranda</button>
   </nav>
 
-  <!-- Halaman 1: Beranda -->
+  <!-- Halaman 1: Katalog Beranda Desa Tegalrejo -->
   <section id="home-view" class="hero">
     <div class="hero-grid">
       <div>
-        <div class="badge-loc">Kawasan Perkotaan Tegalrejo, Kabupaten Magelang</div>
-        <h1>Satu Peta,<br />Satu Data,<br /><span class="accent-pink">Untuk Tegalrejo</span></h1>
-        <p>
-          Portal geospasial berbasis WebGIS untuk visualisasi informasi Penggunaan Lahan, Jaringan Jalan,
-          dan Zona Nilai Tanah (ZNT) Kawasan Perkotaan Tegalrejo secara interaktif.
-        </p>
-        <div class="hero-actions">
-          <button class="btn-primary" onclick="bukaView('map')">Mulai Eksplorasi Peta &rarr;</button>
-          <button class="btn-secondary" onclick="bukaView('map')">Buka Layer Peta</button>
+        <h1>Data Terpadu,<br />Tegalrejo Lebih Maju</h1>
+
+        <div class="desc-highlight">
+          WebGIS Desa Tegalrejo bertujuan untuk menyediakan informasi geografis secara digital dan
+          interaktif melalui penyajian peta penggunaan lahan, jaringan jalan, dan Zona Nilai Tanah
+          (ZNT) guna mempermudah akses informasi serta mendukung perencanaan dan pembangunan desa.
+        </div>
+
+        <div class="hero-cta-wrap">
+          <button class="btn-eksplor" onclick="bukaView('map')">Eksplor peta</button>
         </div>
       </div>
 
-      <!-- Kartu Preview Ilustrasi Pink & Hijau -->
-      <div class="preview-window">
-        <div class="floating-chip chip-top">&#9679; Data GeoJSON Aktif</div>
-        <div class="floating-chip chip-left">&#9679; Multi-Layer GIS</div>
-
-        <div class="window-top">
-          <span class="dot dot-r"></span>
-          <span class="dot dot-y"></span>
-          <span class="dot dot-g"></span>
-          <span style="margin-left: 6px;">WebGIS Tegalrejo</span>
-        </div>
-
-        <div class="preview-canvas">
-          <div class="mock-block b1"></div>
-          <div class="mock-block b2"></div>
-          <div class="mock-block b3"></div>
-          <div class="mock-block b4"></div>
-          <div class="mock-block b5"></div>
-        </div>
-
-        <div class="preview-legend">
-          <span><i class="leg-dot" style="background:#10b981;"></i>RTH / Kebun</span>
-          <span><i class="leg-dot" style="background:#f472b6;"></i>Zona Nilai Tanah</span>
-          <span><i class="leg-dot" style="background:#6ee7b7;"></i>Ruang Terbuka</span>
-          <span><i class="leg-dot" style="background:#ec4899;"></i>Jaringan Jalan</span>
+      <div class="visual-showcase">
+        <img
+          src="mockup-hp-tegalrejo.png"
+          alt="Preview WebGIS Desa Tegalrejo di Smartphone"
+          class="mockup-hp-img"
+          onerror="this.style.display='none'; document.getElementById('mockup-fallback').style.display='block';"
+        />
+        <div id="mockup-fallback" class="mockup-fallback" style="display:none;">
+          <strong style="color:#bef264; font-size:14px;">Preview Mockup Smartphone</strong>
+          <p>
+            Simpan gambar ilustrasi HP &amp; layer dari desain Canva kamu sebagai
+            <code>mockup-hp-tegalrejo.png</code> dan logo sebagai <code>logo-tegalrejo.png</code>
+            di folder proyek yang sama dengan <code>index.html</code>.
+          </p>
         </div>
       </div>
     </div>
 
     <div class="stats-bar">
-      <div>
-        <div class="stat-num">3 Layer</div>
-        <div class="stat-label">PL, Jalan &amp; ZNT</div>
-      </div>
-      <div>
+      <div class="stat-item">
         <div class="stat-num">WGS 84</div>
         <div class="stat-label">EPSG:4326 GeoJSON</div>
       </div>
-      <div>
+      <div class="stat-item">
         <div class="stat-num">100%</div>
         <div class="stat-label">Akses Online Publik</div>
       </div>
@@ -612,7 +533,7 @@
       <div class="dash-card">
         <div class="dash-card-title">
           <span>Ringkasan Layer</span>
-          <span style="font-size:10.5px; color:#6ee7b7; text-transform:none;">Tegalrejo</span>
+          <span style="font-size:10.5px; color:#a7f3d0; text-transform:none;">Tegalrejo</span>
         </div>
         <div class="kpi-grid">
           <div class="kpi-box">
@@ -763,7 +684,7 @@
           rows += '<tr><td>' + key + '</td><td>' + val + '</td></tr>';
         }
       }
-      box.innerHTML = '<strong style="color:#f472b6;">' + judul + '</strong>' +
+      box.innerHTML = '<strong style="color:#bef264;">' + judul + '</strong>' +
         '<table class="inspect-table">' + (rows || '<tr><td colspan="2">Tidak ada atribut</td></tr>') + '</table>';
     }
 
