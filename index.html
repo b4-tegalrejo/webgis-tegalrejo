@@ -20,7 +20,7 @@
 
     body {
       font-family: 'Inter', sans-serif;
-      background: #181c3a;
+      background: #181d3f;
       color: #ffffff;
       min-height: 100vh;
       overflow-x: hidden;
@@ -30,37 +30,79 @@
       display: none !important;
     }
 
-    /* Navbar Transparan/Selaras di Atas Gambar Katalog */
+    /* Navbar */
     .navbar {
-      position: fixed;
+      position: sticky;
       top: 0;
-      left: 0;
-      right: 0;
       z-index: 2000;
-      height: 74px;
+      min-height: 70px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0 3.5%;
-      background: rgba(11, 25, 61, 0.72);
-      backdrop-filter: blur(8px);
+      padding: 10px 4%;
+      background: linear-gradient(90deg, #0b193d 0%, #16244f 52%, #0b193d 100%);
       border-bottom: 2px solid #b5d344;
+      gap: 16px;
     }
 
-    .nav-group-left {
+    .brand {
       display: flex;
       align-items: center;
-      gap: 28px;
+      gap: 12px;
+      cursor: pointer;
+      user-select: none;
     }
 
-    .brand-trigger {
-      background: transparent;
-      border: none;
-      color: transparent;
-      padding: 6px 14px;
-      cursor: pointer;
+    .brand-badges {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .badge-emblem {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: rgba(181, 211, 68, 0.16);
+      border: 1.5px solid #b5d344;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
       font-size: 13px;
+      color: #ecfccb;
+    }
+
+    .badge-t {
+      width: 38px;
+      height: 38px;
+      border-radius: 999px;
+      background: #ffffff;
+      color: #0b193d;
+      border: 2px solid #9ca3af;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 18px;
+    }
+
+    .brand-sub {
+      display: inline-block;
+      background: #e2e8d5;
+      color: #111827;
+      font-size: 10.5px;
       font-weight: 700;
+      padding: 1px 6px;
+      margin-bottom: 2px;
+    }
+
+    .brand-title {
+      display: block;
+      font-size: 17px;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.15;
     }
 
     .nav-links {
@@ -70,122 +112,187 @@
       list-style: none;
     }
 
-    /* Tombol transparan di posisi tombol Canva agar bisa diklik langsung */
-    .hotspot-btn {
-      background: rgba(255, 255, 255, 0.01);
-      color: transparent;
-      border: 1px solid transparent;
-      border-radius: 999px;
-      cursor: pointer;
-      transition: background 0.2s, border-color 0.2s, transform 0.15s;
-    }
-
-    .hotspot-btn:hover {
-      background: rgba(181, 211, 68, 0.16);
-      border-color: rgba(181, 211, 68, 0.55);
-    }
-
-    .nav-pill-slot {
-      width: 112px;
-      height: 28px;
-    }
-
-    .nav-right-slot {
-      width: 110px;
-      height: 28px;
-    }
-
-    /* Saat berada di mode Peta Interaktif, tampilkan navbar solid agar kontrol peta jelas */
-    .navbar.map-mode {
-      position: sticky;
-      background: linear-gradient(90deg, #0b193d 0%, #16244f 50%, #0b193d 100%);
-      backdrop-filter: none;
-    }
-
-    .map-mode-brand {
-      display: none;
-      align-items: center;
-      gap: 10px;
-      cursor: pointer;
-    }
-
-    .navbar.map-mode .nav-group-left,
-    .navbar.map-mode .nav-right-slot {
-      display: none;
-    }
-
-    .navbar.map-mode .map-mode-brand {
-      display: flex;
-    }
-
-    .map-mode-btn {
-      display: none;
-      background: linear-gradient(180deg, #dde4d6 0%, #aeb8a6 44%, #576053 56%, #2a3028 100%);
+    .pill-btn {
+      background: linear-gradient(180deg, #dde4d6 0%, #aeb8a6 45%, #576053 55%, #2a3028 100%);
       color: #111827;
       border: 1.5px solid #edf2e8;
-      padding: 6px 20px;
+      padding: 6px 24px;
       border-radius: 999px;
       font-size: 13px;
       font-weight: 800;
       font-style: italic;
       cursor: pointer;
+      box-shadow: 0 3px 9px rgba(0, 0, 0, 0.38), inset 0 1px 2px rgba(255, 255, 255, 0.85);
+      transition: transform 0.15s, filter 0.2s;
     }
 
-    .navbar.map-mode .map-mode-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    /* Halaman Katalog Berbasis Gambar Desain Canva */
-    .catalog-hero {
-      position: relative;
-      width: 100%;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #181c3a;
-      overflow: hidden;
-    }
-
-    .catalog-frame {
-      position: relative;
-      width: 100%;
-      max-width: 1440px;
-      line-height: 0;
-    }
-
-    .catalog-img {
-      width: 100%;
-      height: auto;
-      display: block;
-    }
-
-    /* Tombol "Eksplor peta" diposisikan tepat di atas tombol pada gambar katalog */
-    .eksplor-hotspot {
-      position: absolute;
-      left: 11.5%;
-      top: 63.5%;
-      width: 24.5%;
-      height: 8.2%;
-      border-radius: 999px;
-      background: transparent;
-      border: 2px solid transparent;
-      color: transparent;
-      cursor: pointer;
-      transition: background 0.2s, border-color 0.2s, transform 0.15s;
-    }
-
-    .eksplor-hotspot:hover {
-      background: rgba(181, 211, 68, 0.2);
-      border-color: rgba(237, 242, 232, 0.85);
+    .pill-btn:hover,
+    .pill-btn.active {
+      filter: brightness(1.08);
       transform: translateY(-1px);
     }
 
-    /* Layout Dashboard: Peta + Panel Samping */
+    /* Halaman Katalog / Beranda */
+    .catalog-hero {
+      min-height: calc(100vh - 70px);
+      padding: 36px 5% 28px;
+      background:
+        radial-gradient(circle at 78% 45%, rgba(56, 189, 248, 0.12), transparent 44%),
+        radial-gradient(circle at 15% 25%, rgba(181, 211, 68, 0.08), transparent 42%),
+        linear-gradient(135deg, #212549 0%, #171b38 55%, #1d2144 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 28px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 36px;
+      align-items: center;
+      margin: auto 0;
+    }
+
+    .hero-title {
+      font-size: clamp(2.4rem, 4.6vw, 4.2rem);
+      font-weight: 900;
+      line-height: 1.08;
+      letter-spacing: -0.02em;
+      color: #ffffff;
+      margin-bottom: 22px;
+    }
+
+    .desc-box {
+      background: #c9db6c;
+      color: #111827;
+      padding: 14px 18px;
+      max-width: 520px;
+      font-size: 13.5px;
+      font-weight: 500;
+      line-height: 1.55;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+      margin-bottom: 34px;
+    }
+
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 16px;
+      padding-left: 24px;
+    }
+
+    .btn-eksplor {
+      background: linear-gradient(180deg, #dde4d6 0%, #aeb8a6 44%, #576053 56%, #2a3028 100%);
+      color: #111827;
+      border: 2px solid #edf2e8;
+      padding: 13px 46px;
+      border-radius: 999px;
+      font-size: 21px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45), inset 0 2px 3px rgba(255, 255, 255, 0.9);
+      transition: transform 0.15s, filter 0.2s;
+    }
+
+    .btn-eksplor:hover {
+      filter: brightness(1.07);
+      transform: translateY(-2px);
+    }
+
+    /* Mockup Katalog di Sisi Kanan */
+    .phone-showcase {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    .phone-frame {
+      width: 100%;
+      max-width: 315px;
+      background: #0d1326;
+      border: 3px solid #475569;
+      border-radius: 34px;
+      padding: 14px;
+      box-shadow: 0 24px 50px rgba(0, 0, 0, 0.55);
+      position: relative;
+    }
+
+    .phone-search {
+      background: #ffffff;
+      color: #111827;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .phone-map-card {
+      background: linear-gradient(150deg, #1e3a2f 0%, #13243b 60%, #2a1f3d 100%);
+      border-radius: 20px;
+      padding: 18px 14px;
+      min-height: 250px;
+      position: relative;
+      border: 1px solid rgba(181, 211, 68, 0.3);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .layer-tag {
+      display: inline-block;
+      background: #ffffff;
+      color: #111827;
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 5px 12px;
+      border-radius: 999px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+      margin-bottom: 8px;
+      width: fit-content;
+    }
+
+    .phone-footer {
+      margin-top: 10px;
+      padding: 10px 12px;
+      background: #111827;
+      border-radius: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: #e2e8f0;
+    }
+
+    .stats-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 64px;
+      padding-left: 24px;
+      padding-top: 8px;
+    }
+
+    .stat-num {
+      font-size: 1.6rem;
+      font-weight: 900;
+      color: #ffffff;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: #e2e8f0;
+      margin-top: 2px;
+    }
+
+    /* Halaman 2: Dashboard Peta + Panel Samping */
     #map-view {
-      height: calc(100vh - 74px);
+      height: calc(100vh - 70px);
       width: 100%;
       display: grid;
       grid-template-columns: 1fr 350px;
@@ -207,7 +314,7 @@
 
     .side-dashboard {
       background: #10261e;
-      border-left: 1px solid rgba(163, 230, 53, 0.28);
+      border-left: 1px solid rgba(181, 211, 68, 0.28);
       padding: 16px;
       overflow-y: auto;
       display: flex;
@@ -321,7 +428,7 @@
     .leaflet-control-layers {
       background: rgba(15, 36, 29, 0.94) !important;
       color: #f4fbf7 !important;
-      border: 1px solid rgba(163, 230, 53, 0.4) !important;
+      border: 1px solid rgba(181, 211, 68, 0.4) !important;
       border-radius: 10px !important;
       padding: 8px 12px !important;
       font-size: 13px !important;
@@ -340,6 +447,7 @@
       color: #14261f;
       line-height: 1.45;
     }
+
     .legend-box h4 {
       margin: 6px 0 5px;
       font-size: 12px;
@@ -347,26 +455,70 @@
       padding-bottom: 3px;
       color: #831843;
     }
-    .legend-box h4:first-child { margin-top: 0; }
-    .legend-item { display: flex; align-items: center; gap: 7px; margin-bottom: 3px; }
-    .swatch-poly { width: 14px; height: 14px; border-radius: 2px; border: 1px solid rgba(0, 0, 0, 0.25); flex-shrink: 0; }
-    .swatch-line { width: 18px; height: 0; flex-shrink: 0; }
 
-    .popup-table { border-collapse: collapse; width: 100%; font-size: 12px; }
-    .popup-table td { padding: 3px 6px; border-bottom: 1px solid #fce7f3; }
-    .popup-table td:first-child { font-weight: 600; color: #9d174d; }
+    .legend-box h4:first-child {
+      margin-top: 0;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 3px;
+    }
+
+    .swatch-poly {
+      width: 14px;
+      height: 14px;
+      border-radius: 2px;
+      border: 1px solid rgba(0, 0, 0, 0.25);
+      flex-shrink: 0;
+    }
+
+    .swatch-line {
+      width: 18px;
+      height: 0;
+      flex-shrink: 0;
+    }
+
+    .popup-table {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: 12px;
+    }
+
+    .popup-table td {
+      padding: 3px 6px;
+      border-bottom: 1px solid #fce7f3;
+    }
+
+    .popup-table td:first-child {
+      font-weight: 600;
+      color: #9d174d;
+    }
 
     @media (max-width: 960px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+      }
+      .nav-links {
+        display: none;
+      }
+      .cta-row,
+      .stats-bar {
+        padding-left: 0;
+        gap: 28px;
+      }
       #map-view {
         grid-template-columns: 1fr;
         grid-template-rows: 58vh auto;
         height: auto;
-        min-height: calc(100vh - 74px);
+        min-height: calc(100vh - 70px);
         overflow: visible;
       }
       .side-dashboard {
         border-left: none;
-        border-top: 1px solid rgba(163, 230, 53, 0.28);
+        border-top: 1px solid rgba(181, 211, 68, 0.28);
         overflow-y: visible;
       }
     }
@@ -374,42 +526,74 @@
 </head>
 <body>
 
-  <!-- Navbar -->
-  <nav id="main-navbar" class="navbar">
-    <div class="nav-group-left">
-      <button type="button" class="brand-trigger" onclick="bukaView('home')" title="Kembali ke Beranda">Beranda</button>
-      <ul class="nav-links">
-        <li><button type="button" class="hotspot-btn nav-pill-slot" onclick="bukaView('home')" title="Beranda">Beranda</button></li>
-        <li><button type="button" class="hotspot-btn nav-pill-slot" onclick="bukaView('map')" title="Peta Interaktif">Peta Interaktif</button></li>
-      </ul>
-    </div>
-
-    <button type="button" class="hotspot-btn nav-right-slot" onclick="bukaView('map')" title="Buka Peta">Buka Peta</button>
-
-    <!-- Ditampilkan otomatis saat membuka halaman Peta Interaktif -->
-    <div class="map-mode-brand" onclick="bukaView('home')">
+  <!-- Navigasi Atas -->
+  <nav class="navbar">
+    <div class="brand" onclick="bukaView('home')">
+      <div class="brand-badges">
+        <div class="badge-emblem">MGL</div>
+        <div class="badge-t">T</div>
+      </div>
       <div>
-        <span style="font-size:11px; color:#bef264; display:block;">Sistem Informasi Geospasial</span>
-        <strong style="font-size:16px; color:#ffffff;">Desa Tegalrejo</strong>
+        <span class="brand-sub">Sistem Informasi Geospasial</span>
+        <span class="brand-title">Desa Tegalrejo</span>
       </div>
     </div>
 
-    <button type="button" class="map-mode-btn" onclick="bukaView('home')">&larr; Kembali ke Katalog</button>
+    <ul class="nav-links">
+      <li><button type="button" id="nav-home" class="pill-btn active" onclick="bukaView('home')">Beranda</button></li>
+      <li><button type="button" id="nav-map" class="pill-btn" onclick="bukaView('map')">Peta Interaktif</button></li>
+    </ul>
+
+    <button type="button" id="nav-cta" class="pill-btn" onclick="bukaView('map')">Buka Peta</button>
   </nav>
 
-  <!-- Halaman 1: Katalog Desain Canva -->
+  <!-- Halaman 1: Katalog Beranda -->
   <section id="home-view" class="catalog-hero">
-    <div class="catalog-frame">
-      <img src="katalog-tegalrejo.png" alt="Katalog WebGIS Desa Tegalrejo" class="catalog-img" />
-      <button
-        type="button"
-        class="eksplor-hotspot"
-        onclick="bukaView('map')"
-        aria-label="Eksplor peta"
-        title="Eksplor peta"
-      >
-        Eksplor peta
-      </button>
+    <div class="hero-grid">
+      <div>
+        <h1 class="hero-title">Data Terpadu,<br />Tegalrejo Lebih Maju</h1>
+
+        <div class="desc-box">
+          WebGIS Desa Tegalrejo bertujuan untuk menyediakan informasi geografis secara digital dan
+          interaktif melalui penyajian peta penggunaan lahan, jaringan jalan, dan Zona Nilai Tanah
+          (ZNT) guna mempermudah akses informasi serta mendukung perencanaan dan pembangunan desa.
+        </div>
+
+        <div class="cta-row">
+          <button type="button" class="btn-eksplor" onclick="bukaView('map')">Eksplor peta</button>
+        </div>
+      </div>
+
+      <div class="phone-showcase">
+        <div class="phone-frame">
+          <div class="phone-search">
+            <span>Desa Tegalrejo, Magelang</span>
+            <span>&#10005;</span>
+          </div>
+
+          <div class="phone-map-card">
+            <span class="layer-tag">Persebaran Fasilitas</span>
+            <span class="layer-tag" style="align-self: flex-end;">Penggunaan Lahan</span>
+            <span class="layer-tag">Zona Nilai Tanah</span>
+          </div>
+
+          <div class="phone-footer">
+            <strong>Tegalrejo</strong>
+            <span>GeoJSON Multi-Layer</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-bar">
+      <div>
+        <div class="stat-num">WGS 84</div>
+        <div class="stat-label">EPSG:4326 GeoJSON</div>
+      </div>
+      <div>
+        <div class="stat-num">100%</div>
+        <div class="stat-label">Akses Online Publik</div>
+      </div>
     </div>
   </section>
 
@@ -420,7 +604,6 @@
     </div>
 
     <aside class="side-dashboard">
-      <!-- Kartu Ringkasan Jumlah Fitur -->
       <div class="dash-card">
         <div class="dash-card-title">
           <span>Ringkasan Layer</span>
@@ -442,7 +625,6 @@
         </div>
       </div>
 
-      <!-- Kartu Sebaran Penggunaan Lahan -->
       <div class="dash-card">
         <div class="dash-card-title">
           <span>Sebaran Penggunaan Lahan</span>
@@ -452,7 +634,6 @@
         </div>
       </div>
 
-      <!-- Kartu Sebaran Kelas ZNT -->
       <div class="dash-card">
         <div class="dash-card-title">
           <span>Sebaran Nilai Lahan (ZNT)</span>
@@ -462,7 +643,6 @@
         </div>
       </div>
 
-      <!-- Kartu Detail Fitur Terpilih -->
       <div class="dash-card">
         <div class="dash-card-title">
           <span>Detail Fitur Terpilih</span>
@@ -483,12 +663,17 @@
     function bukaView(tujuan) {
       const homeView = document.getElementById('home-view');
       const mapView = document.getElementById('map-view');
-      const navbar = document.getElementById('main-navbar');
+      const navHome = document.getElementById('nav-home');
+      const navMap = document.getElementById('nav-map');
+      const navCta = document.getElementById('nav-cta');
 
       if (tujuan === 'map') {
         homeView.classList.add('hidden-view');
         mapView.classList.remove('hidden-view');
-        navbar.classList.add('map-mode');
+        navHome.classList.remove('active');
+        navMap.classList.add('active');
+        navCta.textContent = '← Beranda';
+        navCta.setAttribute('onclick', "bukaView('home')");
 
         setTimeout(function() {
           map.invalidateSize();
@@ -500,7 +685,10 @@
       } else {
         mapView.classList.add('hidden-view');
         homeView.classList.remove('hidden-view');
-        navbar.classList.remove('map-mode');
+        navMap.classList.remove('active');
+        navHome.classList.add('active');
+        navCta.textContent = 'Buka Peta';
+        navCta.setAttribute('onclick', "bukaView('map')");
       }
       window.scrollTo(0, 0);
     }
