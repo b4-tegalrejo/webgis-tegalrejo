@@ -795,13 +795,13 @@
           navCta.setAttribute('onclick', "bukaView('home')");
         }
 
-        setTimeout(function() {
+        setTimeout(function () {
           map.invalidateSize();
           if (!sudahFitBounds && layerPLBounds && layerPLBounds.isValid()) {
             map.fitBounds(layerPLBounds);
             sudahFitBounds = true;
           }
-        }, 70);
+        }, 120);
       } else {
         mapView.classList.add('hidden-view');
         homeView.classList.remove('hidden-view');
@@ -826,7 +826,7 @@
     );
 
     const layerControl = L.control.layers(
-      { "OpenStreetMap": openStreetMap, "Satelit (Google)": satelitGoogle },
+      { 'OpenStreetMap': openStreetMap, 'Satelit (Google)': satelitGoogle },
       {},
       { collapsed: false }
     ).addTo(map);
@@ -876,7 +876,7 @@
 
     function tampilkanDetailPanel(feature, judul) {
       const box = document.getElementById('feature-detail');
-      if (!feature || !feature.properties) return;
+      if (!box || !feature || !feature.properties) return;
 
       const fotoUrl = getFotoUrl(feature.properties);
       const fotoHtml = fotoUrl
@@ -916,20 +916,21 @@
           '<table class="popup-table">' + rows + '</table>' +
         '</div>'
       );
-      layer.on('click', function() {
+      layer.on('click', function () {
         tampilkanDetailPanel(feature, judul);
       });
     }
 
     function renderBarDistribusi(containerId, features, propName, topN) {
       const el = document.getElementById(containerId);
+      if (!el) return;
       if (!features || !features.length) {
         el.innerHTML = '<p style="font-size:12px; color:#94a3b8;">Data tidak tersedia.</p>';
         return;
       }
 
       const counts = {};
-      features.forEach(function(f) {
+      features.forEach(function (f) {
         const raw = f.properties && f.properties[propName];
         const label = (raw !== null && raw !== undefined && String(raw).trim() !== '')
           ? String(raw).trim()
@@ -938,11 +939,11 @@
       });
 
       const sorted = Object.entries(counts)
-        .sort(function(a, b) { return b[1] - a[1]; })
+        .sort(function (a, b) { return b[1] - a[1]; })
         .slice(0, topN || 5);
 
       const total = features.length;
-      el.innerHTML = sorted.map(function(item) {
+      el.innerHTML = sorted.map(function (item) {
         const pct = Math.round((item[1] / total) * 100);
         return '<div class="bar-row">' +
           '<div class="bar-meta"><span>' + item[0] + '</span><span>' + item[1] + ' (' + pct + '%)</span></div>' +
@@ -963,16 +964,14 @@
         layerPL = null;
       }
 
-      document.getElementById('count-pl').textContent = featsPL.length;
+      const countEl = document.getElementById('count-pl');
+      if (countEl) countEl.textContent = featsPL.length;
       renderBarDistribusi('chart-pl', featsPL, 'JENIS', 5);
 
       layerPL = L.geoJSON(
+        { type: 'FeatureCollection', features: featsPL },
         {
-          type: 'FeatureCollection',
-          features: featsPL
-        },
-        {
-          style: function(feature) {
+          style: function (feature) {
             return {
               fillColor: getWarnaPL(feature.properties && feature.properties.JENIS),
               color: '#1e293b',
@@ -980,13 +979,11 @@
               fillOpacity: 0.88
             };
           },
-          onEachFeature: function(feature, layer) {
+          onEachFeature: function (feature, layer) {
             buatPopup(feature, layer, 'Penggunaan Lahan');
           }
         }
-      );
-
-      layerPL.addTo(map);
+      ).addTo(map);
 
       if (updateControl) {
         layerControl.addOverlay(layerPL, 'Penggunaan Lahan');
@@ -995,7 +992,10 @@
       if (featsPL.length > 0 && layerPL.getBounds().isValid()) {
         if (setInitialBounds) {
           layerPLBounds = layerPL.getBounds();
-          map.fitBounds(layerPLBounds);
+          if (!document.getElementById('map-view').classList.contains('hidden-view')) {
+            map.fitBounds(layerPLBounds);
+            sudahFitBounds = true;
+          }
         } else if (zoomToResults) {
           map.fitBounds(layerPL.getBounds(), { padding: [35, 35], maxZoom: 17 });
         }
@@ -1007,75 +1007,76 @@
       if (!rawDataPL || !Array.isArray(rawDataPL.features)) return;
 
       const q = String(keyword || '').trim().toLowerCase();
-
       if (!q) {
         renderLayerPL(rawDataPL, { zoomToResults: false, updateControl: false });
         if (layerPLBounds && layerPLBounds.isValid()) {
           map.fitBounds(layerPLBounds);
         }
-        statusEl.textContent = 'Menampilkan seluruh poligon penggunaan lahan.';
+        if (statusEl) statusEl.textContent = 'Menampilkan seluruh poligon penggunaan lahan.';
         return;
       }
 
-     const filteredFeatures = rawDataPL.features.filter(function(f) {
-  const jenis = String((f.properties && f.properties.JENIS) || '').toLowerCase();
-  return jenis.includes(q);
-});
+      const filteredFeatures = rawDataPL.features.filter(function (f) {
+        const jenis = String((f && f.properties && f.properties.JENIS) || '').toLowerCase();
+        return jenis.includes(q);
       });
 
       renderLayerPL(
-        {
-          type: 'FeatureCollection',
-          features: filteredFeatures
-        },
+        { type: 'FeatureCollection', features: filteredFeatures },
         { zoomToResults: true, updateControl: false }
       );
 
-      if (filteredFeatures.length > 0) {
-        statusEl.textContent = `Ditemukan ${filteredFeatures.length} poligon untuk "${keyword.trim()}".`;
-      } else {
-        statusEl.textContent = `Tidak ada poligon yang cocok dengan "${keyword.trim()}".`;
+      if (statusEl) {
+        statusEl.textContent = filteredFeatures.length > 0
+          ? `Ditemukan ${filteredFeatures.length} poligon untuk "${keyword.trim()}".`
+          : `Tidak ada poligon yang cocok dengan "${keyword.trim()}".`;
       }
     }
 
-    document.getElementById('search-pl').addEventListener('input', function(e) {
-      filterPoligonPL(e.target.value);
-    });
-
-    document.getElementById('btn-reset-pl').addEventListener('click', function() {
-      const input = document.getElementById('search-pl');
-      input.value = '';
-      filterPoligonPL('');
-    });
+    const searchInput = document.getElementById('search-pl');
+    const resetBtn = document.getElementById('btn-reset-pl');
+    if (searchInput) {
+      searchInput.addEventListener('input', function (e) {
+        filterPoligonPL(e.target.value);
+      });
+    }
+    if (resetBtn) {
+      resetBtn.addEventListener('click', function () {
+        if (searchInput) searchInput.value = '';
+        filterPoligonPL('');
+      });
+    }
 
     fetch('pl_tegalrejo.geojson')
-      .then(function(res) { return res.json(); })
-      .then(function(dataPL) {
+      .then(function (res) { return res.json(); })
+      .then(function (dataPL) {
         rawDataPL = dataPL;
         renderLayerPL(dataPL, { updateControl: true, setInitialBounds: true });
         return fetch('jalan_tegalrejo.geojson');
       })
-      .then(function(res) { return res.json(); })
-      .then(function(dataJalan) {
+      .then(function (res) { return res.json(); })
+      .then(function (dataJalan) {
         const featsJalan = dataJalan.features || [];
-        document.getElementById('count-jalan').textContent = featsJalan.length;
+        const jalanEl = document.getElementById('count-jalan');
+        if (jalanEl) jalanEl.textContent = featsJalan.length;
 
         const layerJalan = L.geoJSON(dataJalan, {
           style: getStyleJalan,
-          onEachFeature: function(feature, layer) { buatPopup(feature, layer, 'Jaringan Jalan'); }
+          onEachFeature: function (feature, layer) { buatPopup(feature, layer, 'Jaringan Jalan'); }
         }).addTo(map);
 
         layerControl.addOverlay(layerJalan, 'Jaringan Jalan');
         return fetch('znt_tegalrejo.geojson');
       })
-      .then(function(res) { return res.json(); })
-      .then(function(dataZNT) {
+      .then(function (res) { return res.json(); })
+      .then(function (dataZNT) {
         const featsZNT = dataZNT.features || [];
-        document.getElementById('count-znt').textContent = featsZNT.length;
+        const zntEl = document.getElementById('count-znt');
+        if (zntEl) zntEl.textContent = featsZNT.length;
         renderBarDistribusi('chart-znt', featsZNT, 'Nilai_Laha', 5);
 
         const layerZNT = L.geoJSON(dataZNT, {
-          style: function(feature) {
+          style: function (feature) {
             return {
               fillColor: getWarnaZNT(feature.properties && feature.properties.Nilai_Laha),
               color: '#831843',
@@ -1083,22 +1084,23 @@
               fillOpacity: 0.65
             };
           },
-          onEachFeature: function(feature, layer) { buatPopup(feature, layer, 'Zona Nilai Tanah (ZNT)'); }
+          onEachFeature: function (feature, layer) { buatPopup(feature, layer, 'Zona Nilai Tanah (ZNT)'); }
         }).addTo(map);
 
         layerControl.addOverlay(layerZNT, 'Zona Nilai Tanah (ZNT)');
-        return fetch('fasilitas_tegalrejo.geojson');
+        return fetch('fasilitas_umum.geojson');
       })
-      .then(function(res) {
-        if (!res.ok) throw new Error('File fasilitas_tegalrejo.geojson belum tersedia');
+      .then(function (res) {
+        if (!res.ok) throw new Error('File fasilitas_umum.geojson belum tersedia');
         return res.json();
       })
-      .then(function(dataFasilitas) {
+      .then(function (dataFasilitas) {
         const featsFas = dataFasilitas.features || [];
-        document.getElementById('count-fasilitas').textContent = featsFas.length;
+        const fasEl = document.getElementById('count-fasilitas');
+        if (fasEl) fasEl.textContent = featsFas.length;
 
         const layerFasilitas = L.geoJSON(dataFasilitas, {
-          pointToLayer: function(feature, latlng) {
+          pointToLayer: function (feature, latlng) {
             return L.circleMarker(latlng, {
               radius: 7,
               fillColor: '#0284c7',
@@ -1108,18 +1110,20 @@
               fillOpacity: 0.95
             });
           },
-          onEachFeature: function(feature, layer) {
-            const namaFas = (feature.properties && (feature.properties.nama || feature.properties.NAMA || feature.properties.JENIS)) || 'Fasilitas Umum';
+          onEachFeature: function (feature, layer) {
+            const p = feature.properties || {};
+            const namaFas =
+              p.nama || p.NAMA || p.toponim || p.TOPONYM || p.JENIS || p.REMARK || 'Fasilitas Umum';
             buatPopup(feature, layer, namaFas);
           }
         }).addTo(map);
 
         layerControl.addOverlay(layerFasilitas, 'Persebaran Fasilitas Umum');
       })
-      .catch(function(err) { console.warn(err); });
+      .catch(function (err) { console.warn(err); });
 
     const legend = L.control({ position: 'bottomleft' });
-    legend.onAdd = function() {
+    legend.onAdd = function () {
       const div = L.DomUtil.create('div', 'legend-box');
       div.innerHTML =
         '<h4>Persebaran Fasilitas Umum</h4>' +
