@@ -335,9 +335,55 @@
       align-items: center;
     }
 
+    /* Pencarian Poligon */
+    .search-group {
+      display: flex;
+      gap: 6px;
+    }
+
+    .search-input {
+      flex: 1;
+      background: rgba(11, 28, 22, 0.85);
+      border: 1px solid rgba(167, 243, 208, 0.28);
+      border-radius: 8px;
+      padding: 8px 10px;
+      color: #ffffff;
+      font-size: 12.5px;
+      outline: none;
+    }
+
+    .search-input:focus {
+      border-color: #bef264;
+    }
+
+    .search-input::placeholder {
+      color: #94a3b8;
+    }
+
+    .btn-reset-search {
+      background: rgba(181, 211, 68, 0.18);
+      color: #ecfccb;
+      border: 1px solid rgba(181, 211, 68, 0.45);
+      border-radius: 8px;
+      padding: 0 11px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-reset-search:hover {
+      background: rgba(181, 211, 68, 0.3);
+    }
+
+    .search-status {
+      margin-top: 7px;
+      font-size: 11px;
+      color: #a7f3d0;
+    }
+
     .kpi-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 8px;
     }
 
@@ -398,6 +444,24 @@
       font-size: 12.5px;
       color: #d1fae5;
       line-height: 1.55;
+    }
+
+    .inspect-photo {
+      width: 100%;
+      height: 145px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin: 8px 0;
+      border: 1px solid rgba(167, 243, 208, 0.25);
+    }
+
+    .popup-photo {
+      width: 100%;
+      height: 130px;
+      object-fit: cover;
+      border-radius: 6px;
+      margin-bottom: 7px;
+      display: block;
     }
 
     .inspect-table {
@@ -472,6 +536,16 @@
     .swatch-line {
       width: 18px;
       height: 0;
+      flex-shrink: 0;
+    }
+
+    .swatch-point {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      background: #0284c7;
+      border: 2px solid #ffffff;
+      box-shadow: 0 0 0 1px #0369a1;
       flex-shrink: 0;
     }
 
@@ -568,8 +642,9 @@
 
         <div class="desc-box">
           WebGIS Desa Tegalrejo bertujuan untuk menyediakan informasi geografis secara digital dan
-          interaktif melalui penyajian peta penggunaan lahan, jaringan jalan, dan Zona Nilai Tanah
-          (ZNT) guna mempermudah akses informasi serta mendukung perencanaan dan pembangunan desa.
+          interaktif melalui penyajian peta penggunaan lahan, jaringan jalan, Zona Nilai Tanah
+          (ZNT), dan persebaran fasilitas umum guna mempermudah akses informasi serta mendukung
+          perencanaan dan pembangunan desa.
         </div>
 
         <div class="eksplor-strip">
@@ -624,6 +699,23 @@
     </div>
 
     <aside class="side-dashboard">
+      <!-- Fitur Pencarian / Filter Poligon -->
+      <div class="dash-card">
+        <div class="dash-card-title">
+          <span>Cari Poligon Lahan</span>
+        </div>
+        <div class="search-group">
+          <input
+            type="text"
+            id="search-pl"
+            class="search-input"
+            placeholder="Ketik misal: pendidikan, hunian..."
+          />
+          <button type="button" id="btn-reset-pl" class="btn-reset-search">Reset</button>
+        </div>
+        <div id="search-pl-status" class="search-status">Menampilkan seluruh poligon penggunaan lahan.</div>
+      </div>
+
       <div class="dash-card">
         <div class="dash-card-title">
           <span>Ringkasan Layer</span>
@@ -641,6 +733,10 @@
           <div class="kpi-box">
             <div class="kpi-val" id="count-znt">-</div>
             <div class="kpi-lbl">Zona ZNT</div>
+          </div>
+          <div class="kpi-box">
+            <div class="kpi-val" id="count-fasilitas">0</div>
+            <div class="kpi-lbl">Fasilitas</div>
           </div>
         </div>
       </div>
@@ -668,7 +764,7 @@
           <span>Detail Fitur Terpilih</span>
         </div>
         <div id="feature-detail" class="feature-inspect">
-          Klik salah satu poligon atau garis jalan di peta untuk melihat rincian atributnya di sini.
+          Klik salah satu poligon, garis jalan, atau titik fasilitas di peta untuk melihat rincian atribut dan fotonya di sini.
         </div>
       </div>
     </aside>
@@ -679,6 +775,8 @@
     const map = L.map('map').setView([-7.4685, 110.2680], 14);
     let sudahFitBounds = false;
     let layerPLBounds = null;
+    let rawDataPL = null;
+    let layerPL = null;
 
     function bukaView(tujuan) {
       const homeView = document.getElementById('home-view');
@@ -770,9 +868,21 @@
       return '#9d174d';
     }
 
+    function getFotoUrl(props) {
+      if (!props) return '';
+      const raw = props.foto || props.FOTO || props.gambar || props.GAMBAR || '';
+      return String(raw).trim();
+    }
+
     function tampilkanDetailPanel(feature, judul) {
       const box = document.getElementById('feature-detail');
       if (!feature || !feature.properties) return;
+
+      const fotoUrl = getFotoUrl(feature.properties);
+      const fotoHtml = fotoUrl
+        ? `<img src="${fotoUrl}" alt="${judul}" class="inspect-photo" onerror="this.style.display='none';" />`
+        : '';
+
       let rows = '';
       for (const [key, val] of Object.entries(feature.properties)) {
         if (val !== null && val !== '' && key !== 'OBJECTID' && key !== 'Id') {
@@ -780,18 +890,32 @@
         }
       }
       box.innerHTML = '<strong style="color:#bef264;">' + judul + '</strong>' +
+        fotoHtml +
         '<table class="inspect-table">' + (rows || '<tr><td colspan="2">Tidak ada atribut</td></tr>') + '</table>';
     }
 
     function buatPopup(feature, layer, judul) {
       if (!feature.properties) return;
+
+      const fotoUrl = getFotoUrl(feature.properties);
+      const fotoHtml = fotoUrl
+        ? `<img src="${fotoUrl}" alt="${judul}" class="popup-photo" onerror="this.style.display='none';" />`
+        : '';
+
       let rows = '';
       for (const [key, val] of Object.entries(feature.properties)) {
         if (val !== null && val !== '' && key !== 'OBJECTID' && key !== 'Id') {
           rows += '<tr><td>' + key + '</td><td>' + val + '</td></tr>';
         }
       }
-      layer.bindPopup('<div style="min-width:190px;"><b style="font-size:13px;">' + judul + '</b><hr style="margin:5px 0;"><table class="popup-table">' + rows + '</table></div>');
+      layer.bindPopup(
+        '<div style="min-width:205px;max-width:245px;">' +
+          fotoHtml +
+          '<b style="font-size:13px;">' + judul + '</b>' +
+          '<hr style="margin:5px 0;">' +
+          '<table class="popup-table">' + rows + '</table>' +
+        '</div>'
+      );
       layer.on('click', function() {
         tampilkanDetailPanel(feature, judul);
       });
@@ -827,31 +951,92 @@
       }).join('');
     }
 
+    function renderLayerPL(geojsonData, options = {}) {
+      const { zoomToResults = false, updateControl = false, setInitialBounds = false } = options;
+      const featsPL = geojsonData.features || [];
+
+      if (layerPL) {
+        if (updateControl) layerControl.removeLayer(layerPL);
+        map.removeLayer(layerPL);
+      }
+
+      document.getElementById('count-pl').textContent = featsPL.length;
+      renderBarDistribusi('chart-pl', featsPL, 'JENIS', 5);
+
+      layerPL = L.geoJSON(geojsonData, {
+        style: function(feature) {
+          return {
+            fillColor: getWarnaPL(feature.properties && feature.properties.JENIS),
+            color: '#64748b',
+            weight: 0.4,
+            fillOpacity: 0.8
+          };
+        },
+        onEachFeature: function(feature, layer) { buatPopup(feature, layer, 'Penggunaan Lahan'); }
+      }).addTo(map);
+
+      if (updateControl) {
+        layerControl.addOverlay(layerPL, 'Penggunaan Lahan');
+      }
+
+      if (setInitialBounds && layerPL.getBounds().isValid()) {
+        layerPLBounds = layerPL.getBounds();
+        map.fitBounds(layerPLBounds);
+      } else if (zoomToResults && layerPL.getBounds().isValid()) {
+        map.fitBounds(layerPL.getBounds(), { padding: [24, 24], maxZoom: 17 });
+      }
+    }
+
+    function filterPoligonPL(keyword) {
+      const statusEl = document.getElementById('search-pl-status');
+      if (!rawDataPL) return;
+
+      const q = keyword.trim().toLowerCase();
+      if (!q) {
+        renderLayerPL(rawDataPL, { zoomToResults: false, updateControl: false });
+        if (layerPLBounds && layerPLBounds.isValid()) {
+          map.fitBounds(layerPLBounds);
+        }
+        statusEl.textContent = 'Menampilkan seluruh poligon penggunaan lahan.';
+        return;
+      }
+
+      const filteredFeatures = (rawDataPL.features || []).filter(function(f) {
+        const props = f.properties || {};
+        const jenisMatch = String(props.JENIS || '').toLowerCase().includes(q);
+        const anyPropMatch = Object.values(props).some(function(val) {
+          return String(val ?? '').toLowerCase().includes(q);
+        });
+        return jenisMatch || anyPropMatch;
+      });
+
+      renderLayerPL(
+        { type: 'FeatureCollection', features: filteredFeatures },
+        { zoomToResults: true, updateControl: false }
+      );
+
+      if (filteredFeatures.length > 0) {
+        statusEl.textContent = `Ditemukan ${filteredFeatures.length} poligon untuk "${keyword.trim()}".`;
+      } else {
+        statusEl.textContent = `Tidak ada poligon yang cocok dengan "${keyword.trim()}".`;
+      }
+    }
+
+    document.getElementById('search-pl').addEventListener('input', function(e) {
+      filterPoligonPL(e.target.value);
+    });
+
+    document.getElementById('btn-reset-pl').addEventListener('click', function() {
+      const input = document.getElementById('search-pl');
+      input.value = '';
+      filterPoligonPL('');
+    });
+
     fetch('pl_tegalrejo.geojson')
       .then(function(res) { return res.json(); })
       .then(function(dataPL) {
-        const featsPL = dataPL.features || [];
-        document.getElementById('count-pl').textContent = featsPL.length;
-        renderBarDistribusi('chart-pl', featsPL, 'JENIS', 5);
-
-        const layerPL = L.geoJSON(dataPL, {
-          style: function(feature) {
-            return {
-              fillColor: getWarnaPL(feature.properties && feature.properties.JENIS),
-              color: '#64748b',
-              weight: 0.4,
-              fillOpacity: 0.8
-            };
-          },
-          onEachFeature: function(feature, layer) { buatPopup(feature, layer, 'Penggunaan Lahan'); }
-        }).addTo(map);
-
-        layerControl.addOverlay(layerPL, 'Penggunaan Lahan');
-        if (layerPL.getBounds().isValid()) {
-          layerPLBounds = layerPL.getBounds();
-          map.fitBounds(layerPLBounds);
-        }
-
+        rawDataPL = dataPL;
+        renderLayerPL(dataPL, { updateControl: true, setInitialBounds: true });
         return fetch('jalan_tegalrejo.geojson');
       })
       .then(function(res) { return res.json(); })
@@ -886,13 +1071,43 @@
         }).addTo(map);
 
         layerControl.addOverlay(layerZNT, 'Zona Nilai Tanah (ZNT)');
+        return fetch('fasilitas_tegalrejo.geojson');
       })
-      .catch(function(err) { console.error(err); });
+      .then(function(res) {
+        if (!res.ok) throw new Error('File fasilitas_tegalrejo.geojson belum tersedia');
+        return res.json();
+      })
+      .then(function(dataFasilitas) {
+        const featsFas = dataFasilitas.features || [];
+        document.getElementById('count-fasilitas').textContent = featsFas.length;
+
+        const layerFasilitas = L.geoJSON(dataFasilitas, {
+          pointToLayer: function(feature, latlng) {
+            return L.circleMarker(latlng, {
+              radius: 7,
+              fillColor: '#0284c7',
+              color: '#ffffff',
+              weight: 2,
+              opacity: 1,
+              fillOpacity: 0.95
+            });
+          },
+          onEachFeature: function(feature, layer) {
+            const namaFas = (feature.properties && (feature.properties.nama || feature.properties.NAMA || feature.properties.JENIS)) || 'Fasilitas Umum';
+            buatPopup(feature, layer, namaFas);
+          }
+        }).addTo(map);
+
+        layerControl.addOverlay(layerFasilitas, 'Persebaran Fasilitas Umum');
+      })
+      .catch(function(err) { console.warn(err); });
 
     const legend = L.control({ position: 'bottomleft' });
     legend.onAdd = function() {
       const div = L.DomUtil.create('div', 'legend-box');
       div.innerHTML =
+        '<h4>Persebaran Fasilitas Umum</h4>' +
+        '<div class="legend-item"><span class="swatch-point"></span>Titik Fasilitas</div>' +
         '<h4>Zona Nilai Tanah (ZNT)</h4>' +
         '<div class="legend-item"><span class="swatch-poly" style="background:#fde047;"></span>100.000 - 200.000</div>' +
         '<div class="legend-item"><span class="swatch-poly" style="background:#f59e0b;"></span>200.000 - 500.000</div>' +
