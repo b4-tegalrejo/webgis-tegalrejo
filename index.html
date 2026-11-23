@@ -715,7 +715,7 @@
           <button type="button" id="btn-reset-search" class="btn-reset-search">Reset</button>
         </div>
         <div id="search-status" class="search-status">
-          Filter aktif pada layer yang menyala (PL: JENIS, Jalan: JENIS, ZNT: Nilai_Laha, Fasilitas: KGTN_OBJEK).
+          Menyaring layer yang tercentang (PL: JENIS, Jalan: JENIS, ZNT: Nilai_Laha, Fasilitas: KGTN_OBJEK).
         </div>
       </div>
 
@@ -805,14 +805,6 @@
     let layerZNT = null;
     let layerFasilitas = null;
 
-    // Status centang/aktif layer di peta (mengikuti Layer Control)
-    const layerActiveState = {
-      pl: true,
-      jalan: true,
-      znt: true,
-      fasilitas: true
-    };
-
     function bukaView(tujuan) {
       const homeView = document.getElementById('home-view');
       const mapView = document.getElementById('map-view');
@@ -866,20 +858,20 @@
       { collapsed: false }
     ).addTo(map);
 
-    // Pantau saat user mencentang / menghapus centang layer di Layer Control
-    map.on('overlayadd', function (e) {
-      if (layerPL && e.layer === layerPL) layerActiveState.pl = true;
-      if (layerJalan && e.layer === layerJalan) layerActiveState.jalan = true;
-      if (layerZNT && e.layer === layerZNT) layerActiveState.znt = true;
-      if (layerFasilitas && e.layer === layerFasilitas) layerActiveState.fasilitas = true;
-    });
-
-    map.on('overlayremove', function (e) {
-      if (layerPL && e.layer === layerPL) layerActiveState.pl = false;
-      if (layerJalan && e.layer === layerJalan) layerActiveState.jalan = false;
-      if (layerZNT && e.layer === layerZNT) layerActiveState.znt = false;
-      if (layerFasilitas && e.layer === layerFasilitas) layerActiveState.fasilitas = false;
-    });
+    // Membaca langsung apakah overlay tertentu sedang tercentang di Layer Control
+    function isOverlayChecked(overlayLabel) {
+      const container = layerControl && layerControl._container;
+      if (!container) return true;
+      const labels = container.querySelectorAll('.leaflet-control-layers-overlays label');
+      for (let i = 0; i < labels.length; i++) {
+        const text = labels[i].textContent ? labels[i].textContent.trim() : '';
+        if (text.includes(overlayLabel)) {
+          const input = labels[i].querySelector('input[type="checkbox"]');
+          if (input) return Boolean(input.checked);
+        }
+      }
+      return true;
+    }
 
     function getPropValue(props, keyName) {
       if (!props) return '';
@@ -1010,9 +1002,9 @@
     }
 
     function renderLayerPL(geojsonData, options = {}) {
-      const { updateControl = false, setInitialBounds = false, keepActiveState = true } = options;
+      const { updateControl = false, setInitialBounds = false, forceShow = false } = options;
       const featsPL = Array.isArray(geojsonData.features) ? geojsonData.features : [];
-      const shouldShow = keepActiveState ? layerActiveState.pl : true;
+      const shouldShow = forceShow ? true : isOverlayChecked('Penggunaan Lahan');
 
       if (layerPL) {
         if (updateControl) layerControl.removeLayer(layerPL);
@@ -1061,9 +1053,9 @@
     }
 
     function renderLayerJalan(geojsonData, options = {}) {
-      const { updateControl = false, keepActiveState = true } = options;
+      const { updateControl = false, forceShow = false } = options;
       const featsJalan = Array.isArray(geojsonData.features) ? geojsonData.features : [];
-      const shouldShow = keepActiveState ? layerActiveState.jalan : true;
+      const shouldShow = forceShow ? true : isOverlayChecked('Jaringan Jalan');
 
       if (layerJalan) {
         if (updateControl) layerControl.removeLayer(layerJalan);
@@ -1096,9 +1088,9 @@
     }
 
     function renderLayerZNT(geojsonData, options = {}) {
-      const { updateControl = false, keepActiveState = true } = options;
+      const { updateControl = false, forceShow = false } = options;
       const featsZNT = Array.isArray(geojsonData.features) ? geojsonData.features : [];
-      const shouldShow = keepActiveState ? layerActiveState.znt : true;
+      const shouldShow = forceShow ? true : isOverlayChecked('Zona Nilai Tanah (ZNT)');
 
       if (layerZNT) {
         if (updateControl) layerControl.removeLayer(layerZNT);
@@ -1140,9 +1132,9 @@
     }
 
     function renderLayerFasilitas(geojsonData, options = {}) {
-      const { updateControl = false, keepActiveState = true } = options;
+      const { updateControl = false, forceShow = false } = options;
       const featsFas = Array.isArray(geojsonData.features) ? geojsonData.features : [];
-      const shouldShow = keepActiveState ? layerActiveState.fasilitas : true;
+      const shouldShow = forceShow ? true : isOverlayChecked('Persebaran Fasilitas Umum');
 
       if (layerFasilitas) {
         if (updateControl) layerControl.removeLayer(layerFasilitas);
@@ -1188,18 +1180,23 @@
       const statusEl = document.getElementById('search-status');
       const q = String(keyword || '').trim().toLowerCase();
 
-      // Jika kosong, kembalikan tiap layer ke data utuhnya tanpa mengubah centang aktifnya
+      const plChecked = isOverlayChecked('Penggunaan Lahan');
+      const jalanChecked = isOverlayChecked('Jaringan Jalan');
+      const zntChecked = isOverlayChecked('Zona Nilai Tanah (ZNT)');
+      const fasChecked = isOverlayChecked('Persebaran Fasilitas Umum');
+
+      // Jika kosong, kembalikan tiap layer ke data utuhnya sesuai centang aktifnya
       if (!q) {
-        if (rawDataPL) renderLayerPL(rawDataPL, { keepActiveState: true });
-        if (rawDataJalan) renderLayerJalan(rawDataJalan, { keepActiveState: true });
-        if (rawDataZNT) renderLayerZNT(rawDataZNT, { keepActiveState: true });
-        if (rawDataFasilitas) renderLayerFasilitas(rawDataFasilitas, { keepActiveState: true });
+        if (rawDataPL) renderLayerPL(rawDataPL);
+        if (rawDataJalan) renderLayerJalan(rawDataJalan);
+        if (rawDataZNT) renderLayerZNT(rawDataZNT);
+        if (rawDataFasilitas) renderLayerFasilitas(rawDataFasilitas);
 
         if (layerPLBounds && layerPLBounds.isValid()) {
           map.fitBounds(layerPLBounds);
         }
         if (statusEl) {
-          statusEl.textContent = 'Filter aktif pada layer yang menyala (PL: JENIS, Jalan: JENIS, ZNT: Nilai_Laha, Fasilitas: KGTN_OBJEK).';
+          statusEl.textContent = 'Menyaring layer yang tercentang (PL: JENIS, Jalan: JENIS, ZNT: Nilai_Laha, Fasilitas: KGTN_OBJEK).';
         }
         return;
       }
@@ -1207,44 +1204,52 @@
       const summary = [];
       const matchedBounds = [];
 
-      // 1. PL -> kolom JENIS (hanya jika layer PL sedang menyala)
-      if (rawDataPL && layerActiveState.pl) {
+      // 1. PL -> kolom JENIS (hanya jika tercentang)
+      if (rawDataPL && plChecked) {
         const filteredPL = (rawDataPL.features || []).filter(function (f) {
           return getPropValue(f.properties, 'JENIS').toLowerCase().includes(q);
         });
-        renderLayerPL({ type: 'FeatureCollection', features: filteredPL }, { keepActiveState: true });
+        renderLayerPL({ type: 'FeatureCollection', features: filteredPL });
         summary.push(`PL: ${filteredPL.length}`);
-        if (layerPL && layerPL.getBounds().isValid()) matchedBounds.push(layerPL.getBounds());
+        if (filteredPL.length > 0 && layerPL && layerPL.getBounds().isValid()) {
+          matchedBounds.push(layerPL.getBounds());
+        }
       }
 
-      // 2. Jalan -> kolom JENIS (hanya jika layer Jalan sedang menyala)
-      if (rawDataJalan && layerActiveState.jalan) {
+      // 2. Jalan -> kolom JENIS (hanya jika tercentang)
+      if (rawDataJalan && jalanChecked) {
         const filteredJalan = (rawDataJalan.features || []).filter(function (f) {
           return getPropValue(f.properties, 'JENIS').toLowerCase().includes(q);
         });
-        renderLayerJalan({ type: 'FeatureCollection', features: filteredJalan }, { keepActiveState: true });
+        renderLayerJalan({ type: 'FeatureCollection', features: filteredJalan });
         summary.push(`Jalan: ${filteredJalan.length}`);
-        if (layerJalan && layerJalan.getBounds().isValid()) matchedBounds.push(layerJalan.getBounds());
+        if (filteredJalan.length > 0 && layerJalan && layerJalan.getBounds().isValid()) {
+          matchedBounds.push(layerJalan.getBounds());
+        }
       }
 
-      // 3. ZNT -> kolom Nilai_Laha (hanya jika layer ZNT sedang menyala)
-      if (rawDataZNT && layerActiveState.znt) {
+      // 3. ZNT -> kolom Nilai_Laha (hanya jika tercentang)
+      if (rawDataZNT && zntChecked) {
         const filteredZNT = (rawDataZNT.features || []).filter(function (f) {
           return getPropValue(f.properties, 'Nilai_Laha').toLowerCase().includes(q);
         });
-        renderLayerZNT({ type: 'FeatureCollection', features: filteredZNT }, { keepActiveState: true });
+        renderLayerZNT({ type: 'FeatureCollection', features: filteredZNT });
         summary.push(`ZNT: ${filteredZNT.length}`);
-        if (layerZNT && layerZNT.getBounds().isValid()) matchedBounds.push(layerZNT.getBounds());
+        if (filteredZNT.length > 0 && layerZNT && layerZNT.getBounds().isValid()) {
+          matchedBounds.push(layerZNT.getBounds());
+        }
       }
 
-      // 4. Persebaran Fasilitas Umum -> kolom KGTN_OBJEK (hanya jika layer Fasilitas sedang menyala)
-      if (rawDataFasilitas && layerActiveState.fasilitas) {
+      // 4. Persebaran Fasilitas Umum -> kolom KGTN_OBJEK (hanya jika tercentang)
+      if (rawDataFasilitas && fasChecked) {
         const filteredFas = (rawDataFasilitas.features || []).filter(function (f) {
           return getPropValue(f.properties, 'KGTN_OBJEK').toLowerCase().includes(q);
         });
-        renderLayerFasilitas({ type: 'FeatureCollection', features: filteredFas }, { keepActiveState: true });
+        renderLayerFasilitas({ type: 'FeatureCollection', features: filteredFas });
         summary.push(`Fasilitas: ${filteredFas.length}`);
-        if (layerFasilitas && layerFasilitas.getBounds().isValid()) matchedBounds.push(layerFasilitas.getBounds());
+        if (filteredFas.length > 0 && layerFasilitas && layerFasilitas.getBounds().isValid()) {
+          matchedBounds.push(layerFasilitas.getBounds());
+        }
       }
 
       if (matchedBounds.length > 0) {
@@ -1260,7 +1265,7 @@
       if (statusEl) {
         statusEl.textContent = summary.length > 0
           ? `Kata kunci "${keyword.trim()}" -> ${summary.join(' | ')}`
-          : 'Tidak ada layer aktif yang sedang menyala.';
+          : 'Centang minimal satu layer di peta untuk menyaring data.';
       }
     }
 
@@ -1278,7 +1283,7 @@
       });
     }
 
-    // Muat tiap GeoJSON secara mandiri agar satu file gagal/belum ada tidak menghalangi layer lain
+    // Muat tiap GeoJSON secara mandiri
     fetch('pl_tegalrejo.geojson')
       .then(function (res) {
         if (!res.ok) throw new Error('pl_tegalrejo.geojson tidak ditemukan');
@@ -1286,7 +1291,7 @@
       })
       .then(function (dataPL) {
         rawDataPL = dataPL;
-        renderLayerPL(dataPL, { updateControl: true, setInitialBounds: true, keepActiveState: false });
+        renderLayerPL(dataPL, { updateControl: true, setInitialBounds: true, forceShow: true });
       })
       .catch(function (err) { console.warn(err); });
 
@@ -1297,7 +1302,7 @@
       })
       .then(function (dataJalan) {
         rawDataJalan = dataJalan;
-        renderLayerJalan(dataJalan, { updateControl: true, keepActiveState: false });
+        renderLayerJalan(dataJalan, { updateControl: true, forceShow: true });
       })
       .catch(function (err) { console.warn(err); });
 
@@ -1308,7 +1313,7 @@
       })
       .then(function (dataZNT) {
         rawDataZNT = dataZNT;
-        renderLayerZNT(dataZNT, { updateControl: true, keepActiveState: false });
+        renderLayerZNT(dataZNT, { updateControl: true, forceShow: true });
       })
       .catch(function (err) { console.warn(err); });
 
@@ -1319,7 +1324,7 @@
       })
       .then(function (dataFasilitas) {
         rawDataFasilitas = dataFasilitas;
-        renderLayerFasilitas(dataFasilitas, { updateControl: true, keepActiveState: false });
+        renderLayerFasilitas(dataFasilitas, { updateControl: true, forceShow: true });
       })
       .catch(function (err) { console.warn(err); });
 
