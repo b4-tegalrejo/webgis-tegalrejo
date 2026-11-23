@@ -699,7 +699,7 @@
     </div>
 
     <aside class="side-dashboard">
-      <!-- Fitur Pencarian / Filter Poligon -->
+      <!-- Pencarian Poligon -->
       <div class="dash-card">
         <div class="dash-card-title">
           <span>Cari Poligon Lahan</span>
@@ -709,7 +709,7 @@
             type="text"
             id="search-pl"
             class="search-input"
-            placeholder="Ketik misal: pendidikan, hunian..."
+            placeholder="Ketik misal: pendidikan, tegalan..."
           />
           <button type="button" id="btn-reset-pl" class="btn-reset-search">Reset</button>
         </div>
@@ -953,45 +953,61 @@
 
     function renderLayerPL(geojsonData, options = {}) {
       const { zoomToResults = false, updateControl = false, setInitialBounds = false } = options;
-      const featsPL = geojsonData.features || [];
+      const featsPL = Array.isArray(geojsonData.features) ? geojsonData.features : [];
 
       if (layerPL) {
-        if (updateControl) layerControl.removeLayer(layerPL);
+        if (updateControl) {
+          layerControl.removeLayer(layerPL);
+        }
         map.removeLayer(layerPL);
+        layerPL = null;
       }
 
       document.getElementById('count-pl').textContent = featsPL.length;
       renderBarDistribusi('chart-pl', featsPL, 'JENIS', 5);
 
-      layerPL = L.geoJSON(geojsonData, {
-        style: function(feature) {
-          return {
-            fillColor: getWarnaPL(feature.properties && feature.properties.JENIS),
-            color: '#64748b',
-            weight: 0.4,
-            fillOpacity: 0.8
-          };
+      layerPL = L.geoJSON(
+        {
+          type: 'FeatureCollection',
+          features: featsPL
         },
-        onEachFeature: function(feature, layer) { buatPopup(feature, layer, 'Penggunaan Lahan'); }
-      }).addTo(map);
+        {
+          style: function(feature) {
+            return {
+              fillColor: getWarnaPL(feature.properties && feature.properties.JENIS),
+              color: '#1e293b',
+              weight: 1.2,
+              fillOpacity: 0.88
+            };
+          },
+          onEachFeature: function(feature, layer) {
+            buatPopup(feature, layer, 'Penggunaan Lahan');
+          }
+        }
+      );
+
+      layerPL.addTo(map);
 
       if (updateControl) {
         layerControl.addOverlay(layerPL, 'Penggunaan Lahan');
       }
 
-      if (setInitialBounds && layerPL.getBounds().isValid()) {
-        layerPLBounds = layerPL.getBounds();
-        map.fitBounds(layerPLBounds);
-      } else if (zoomToResults && layerPL.getBounds().isValid()) {
-        map.fitBounds(layerPL.getBounds(), { padding: [24, 24], maxZoom: 17 });
+      if (featsPL.length > 0 && layerPL.getBounds().isValid()) {
+        if (setInitialBounds) {
+          layerPLBounds = layerPL.getBounds();
+          map.fitBounds(layerPLBounds);
+        } else if (zoomToResults) {
+          map.fitBounds(layerPL.getBounds(), { padding: [35, 35], maxZoom: 17 });
+        }
       }
     }
 
     function filterPoligonPL(keyword) {
       const statusEl = document.getElementById('search-pl-status');
-      if (!rawDataPL) return;
+      if (!rawDataPL || !Array.isArray(rawDataPL.features)) return;
 
-      const q = keyword.trim().toLowerCase();
+      const q = String(keyword || '').trim().toLowerCase();
+
       if (!q) {
         renderLayerPL(rawDataPL, { zoomToResults: false, updateControl: false });
         if (layerPLBounds && layerPLBounds.isValid()) {
@@ -1001,17 +1017,20 @@
         return;
       }
 
-      const filteredFeatures = (rawDataPL.features || []).filter(function(f) {
-        const props = f.properties || {};
-        const jenisMatch = String(props.JENIS || '').toLowerCase().includes(q);
-        const anyPropMatch = Object.values(props).some(function(val) {
-          return String(val ?? '').toLowerCase().includes(q);
+      const filteredFeatures = rawDataPL.features.filter(function(f) {
+        const props = f && f.properties ? f.properties : {};
+        return Object.values(props).some(function(val) {
+          if (val === null || val === undefined) return false;
+          const strVal = String(val).trim().toLowerCase();
+          return strVal.length > 0 && strVal.includes(q);
         });
-        return jenisMatch || anyPropMatch;
       });
 
       renderLayerPL(
-        { type: 'FeatureCollection', features: filteredFeatures },
+        {
+          type: 'FeatureCollection',
+          features: filteredFeatures
+        },
         { zoomToResults: true, updateControl: false }
       );
 
