@@ -335,7 +335,7 @@
       align-items: center;
     }
 
-    /* Pencarian Poligon */
+    /* Pencarian Multi-Layer */
     .search-group {
       display: flex;
       gap: 6px;
@@ -379,6 +379,7 @@
       margin-top: 7px;
       font-size: 11px;
       color: #a7f3d0;
+      line-height: 1.45;
     }
 
     .kpi-grid {
@@ -699,21 +700,23 @@
     </div>
 
     <aside class="side-dashboard">
-      <!-- Pencarian Poligon -->
+      <!-- Pencarian Multi-Layer -->
       <div class="dash-card">
         <div class="dash-card-title">
-          <span>Cari Poligon Lahan</span>
+          <span>Cari Fitur Layer</span>
         </div>
         <div class="search-group">
           <input
             type="text"
-            id="search-pl"
+            id="search-layer"
             class="search-input"
-            placeholder="Ketik misal: pendidikan, tegalan..."
+            placeholder="Cari JENIS, Nilai_Laha, KGTN_OBJEK..."
           />
-          <button type="button" id="btn-reset-pl" class="btn-reset-search">Reset</button>
+          <button type="button" id="btn-reset-search" class="btn-reset-search">Reset</button>
         </div>
-        <div id="search-pl-status" class="search-status">Menampilkan seluruh poligon penggunaan lahan.</div>
+        <div id="search-status" class="search-status">
+          Filter aktif pada layer yang menyala (PL: JENIS, Jalan: JENIS, ZNT: Nilai_Laha, Fasilitas: KGTN_OBJEK).
+        </div>
       </div>
 
       <div class="dash-card">
@@ -773,10 +776,42 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     const map = L.map('map').setView([-7.4685, 110.2680], 14);
+
+    // Pane khusus agar garis jalan & titik fasilitas lebih mudah diklik dan tidak tertindih poligon
+    map.createPane('panePL');
+    map.getPane('panePL').style.zIndex = 410;
+
+    map.createPane('paneZNT');
+    map.getPane('paneZNT').style.zIndex = 415;
+
+    map.createPane('paneJalan');
+    map.getPane('paneJalan').style.zIndex = 425;
+
+    map.createPane('paneFasilitas');
+    map.getPane('paneFasilitas').style.zIndex = 435;
+
     let sudahFitBounds = false;
     let layerPLBounds = null;
+
+    // Data mentah tiap layer
     let rawDataPL = null;
+    let rawDataJalan = null;
+    let rawDataZNT = null;
+    let rawDataFasilitas = null;
+
+    // Layer Leaflet aktif
     let layerPL = null;
+    let layerJalan = null;
+    let layerZNT = null;
+    let layerFasilitas = null;
+
+    // Status centang/aktif layer di peta (mengikuti Layer Control)
+    const layerActiveState = {
+      pl: true,
+      jalan: true,
+      znt: true,
+      fasilitas: true
+    };
 
     function bukaView(tujuan) {
       const homeView = document.getElementById('home-view');
@@ -831,6 +866,29 @@
       { collapsed: false }
     ).addTo(map);
 
+    // Pantau saat user mencentang / menghapus centang layer di Layer Control
+    map.on('overlayadd', function (e) {
+      if (layerPL && e.layer === layerPL) layerActiveState.pl = true;
+      if (layerJalan && e.layer === layerJalan) layerActiveState.jalan = true;
+      if (layerZNT && e.layer === layerZNT) layerActiveState.znt = true;
+      if (layerFasilitas && e.layer === layerFasilitas) layerActiveState.fasilitas = true;
+    });
+
+    map.on('overlayremove', function (e) {
+      if (layerPL && e.layer === layerPL) layerActiveState.pl = false;
+      if (layerJalan && e.layer === layerJalan) layerActiveState.jalan = false;
+      if (layerZNT && e.layer === layerZNT) layerActiveState.znt = false;
+      if (layerFasilitas && e.layer === layerFasilitas) layerActiveState.fasilitas = false;
+    });
+
+    function getPropValue(props, keyName) {
+      if (!props) return '';
+      if (props[keyName] !== undefined && props[keyName] !== null && String(props[keyName]).trim() !== '') {
+        return String(props[keyName]).trim();
+      }
+      return '';
+    }
+
     function getWarnaPL(jenis) {
       if (!jenis) return '#cccccc';
       const j = String(jenis).toLowerCase();
@@ -851,11 +909,11 @@
     }
 
     function getStyleJalan(feature) {
-      const f = String((feature.properties && feature.properties.fungsi_jal) || '').toLowerCase();
-      if (f.includes('arteri')) return { color: '#dc2626', weight: 4.5, opacity: 1 };
-      if (f.includes('kolektor')) return { color: '#f97316', weight: 3.2, opacity: 1 };
-      if (f.includes('lokal')) return { color: '#7e22ce', weight: 2.2, opacity: 0.95 };
-      return { color: '#334155', weight: 1.4, opacity: 0.85 };
+      const jenisJalan = getPropValue(feature.properties, 'JENIS').toLowerCase();
+      if (jenisJalan.includes('arteri')) return { pane: 'paneJalan', color: '#dc2626', weight: 4.5, opacity: 1 };
+      if (jenisJalan.includes('kolektor')) return { pane: 'paneJalan', color: '#f97316', weight: 3.5, opacity: 1 };
+      if (jenisJalan.includes('lokal')) return { pane: 'paneJalan', color: '#7e22ce', weight: 2.8, opacity: 0.98 };
+      return { pane: 'paneJalan', color: '#1e293b', weight: 2.4, opacity: 0.95 };
     }
 
     function getWarnaZNT(nilai) {
@@ -916,7 +974,8 @@
           '<table class="popup-table">' + rows + '</table>' +
         '</div>'
       );
-      layer.on('click', function () {
+      layer.on('click', function (e) {
+        L.DomEvent.stopPropagation(e);
         tampilkanDetailPanel(feature, judul);
       });
     }
@@ -931,10 +990,8 @@
 
       const counts = {};
       features.forEach(function (f) {
-        const raw = f.properties && f.properties[propName];
-        const label = (raw !== null && raw !== undefined && String(raw).trim() !== '')
-          ? String(raw).trim()
-          : 'Tidak Keterangan';
+        const raw = getPropValue(f.properties, propName);
+        const label = raw !== '' ? raw : 'Tidak Keterangan';
         counts[label] = (counts[label] || 0) + 1;
       });
 
@@ -953,13 +1010,12 @@
     }
 
     function renderLayerPL(geojsonData, options = {}) {
-      const { zoomToResults = false, updateControl = false, setInitialBounds = false } = options;
+      const { updateControl = false, setInitialBounds = false, keepActiveState = true } = options;
       const featsPL = Array.isArray(geojsonData.features) ? geojsonData.features : [];
+      const shouldShow = keepActiveState ? layerActiveState.pl : true;
 
       if (layerPL) {
-        if (updateControl) {
-          layerControl.removeLayer(layerPL);
-        }
+        if (updateControl) layerControl.removeLayer(layerPL);
         map.removeLayer(layerPL);
         layerPL = null;
       }
@@ -971,11 +1027,13 @@
       layerPL = L.geoJSON(
         { type: 'FeatureCollection', features: featsPL },
         {
+          pane: 'panePL',
           style: function (feature) {
             return {
-              fillColor: getWarnaPL(feature.properties && feature.properties.JENIS),
+              pane: 'panePL',
+              fillColor: getWarnaPL(getPropValue(feature.properties, 'JENIS')),
               color: '#1e293b',
-              weight: 1.2,
+              weight: 1.1,
               fillOpacity: 0.88
             };
           },
@@ -983,125 +1041,125 @@
             buatPopup(feature, layer, 'Penggunaan Lahan');
           }
         }
-      ).addTo(map);
+      );
+
+      if (shouldShow) {
+        layerPL.addTo(map);
+      }
 
       if (updateControl) {
         layerControl.addOverlay(layerPL, 'Penggunaan Lahan');
       }
 
-      if (featsPL.length > 0 && layerPL.getBounds().isValid()) {
-        if (setInitialBounds) {
-          layerPLBounds = layerPL.getBounds();
-          if (!document.getElementById('map-view').classList.contains('hidden-view')) {
-            map.fitBounds(layerPLBounds);
-            sudahFitBounds = true;
-          }
-        } else if (zoomToResults) {
-          map.fitBounds(layerPL.getBounds(), { padding: [35, 35], maxZoom: 17 });
+      if (featsPL.length > 0 && layerPL.getBounds().isValid() && setInitialBounds) {
+        layerPLBounds = layerPL.getBounds();
+        if (!document.getElementById('map-view').classList.contains('hidden-view')) {
+          map.fitBounds(layerPLBounds);
+          sudahFitBounds = true;
         }
       }
     }
 
-    function filterPoligonPL(keyword) {
-      const statusEl = document.getElementById('search-pl-status');
-      if (!rawDataPL || !Array.isArray(rawDataPL.features)) return;
+    function renderLayerJalan(geojsonData, options = {}) {
+      const { updateControl = false, keepActiveState = true } = options;
+      const featsJalan = Array.isArray(geojsonData.features) ? geojsonData.features : [];
+      const shouldShow = keepActiveState ? layerActiveState.jalan : true;
 
-      const q = String(keyword || '').trim().toLowerCase();
-      if (!q) {
-        renderLayerPL(rawDataPL, { zoomToResults: false, updateControl: false });
-        if (layerPLBounds && layerPLBounds.isValid()) {
-          map.fitBounds(layerPLBounds);
-        }
-        if (statusEl) statusEl.textContent = 'Menampilkan seluruh poligon penggunaan lahan.';
-        return;
+      if (layerJalan) {
+        if (updateControl) layerControl.removeLayer(layerJalan);
+        map.removeLayer(layerJalan);
+        layerJalan = null;
       }
 
-      const filteredFeatures = rawDataPL.features.filter(function (f) {
-        const jenis = String((f && f.properties && f.properties.JENIS) || '').toLowerCase();
-        return jenis.includes(q);
-      });
+      const jalanEl = document.getElementById('count-jalan');
+      if (jalanEl) jalanEl.textContent = featsJalan.length;
 
-      renderLayerPL(
-        { type: 'FeatureCollection', features: filteredFeatures },
-        { zoomToResults: true, updateControl: false }
+      layerJalan = L.geoJSON(
+        { type: 'FeatureCollection', features: featsJalan },
+        {
+          pane: 'paneJalan',
+          style: getStyleJalan,
+          onEachFeature: function (feature, layer) {
+            const jenisJln = getPropValue(feature.properties, 'JENIS') || 'Jaringan Jalan';
+            buatPopup(feature, layer, 'Jaringan Jalan — ' + jenisJln);
+          }
+        }
       );
 
-      if (statusEl) {
-        statusEl.textContent = filteredFeatures.length > 0
-          ? `Ditemukan ${filteredFeatures.length} poligon untuk "${keyword.trim()}".`
-          : `Tidak ada poligon yang cocok dengan "${keyword.trim()}".`;
+      if (shouldShow) {
+        layerJalan.addTo(map);
+      }
+
+      if (updateControl) {
+        layerControl.addOverlay(layerJalan, 'Jaringan Jalan');
       }
     }
 
-    const searchInput = document.getElementById('search-pl');
-    const resetBtn = document.getElementById('btn-reset-pl');
-    if (searchInput) {
-      searchInput.addEventListener('input', function (e) {
-        filterPoligonPL(e.target.value);
-      });
-    }
-    if (resetBtn) {
-      resetBtn.addEventListener('click', function () {
-        if (searchInput) searchInput.value = '';
-        filterPoligonPL('');
-      });
-    }
+    function renderLayerZNT(geojsonData, options = {}) {
+      const { updateControl = false, keepActiveState = true } = options;
+      const featsZNT = Array.isArray(geojsonData.features) ? geojsonData.features : [];
+      const shouldShow = keepActiveState ? layerActiveState.znt : true;
 
-    fetch('pl_tegalrejo.geojson')
-      .then(function (res) { return res.json(); })
-      .then(function (dataPL) {
-        rawDataPL = dataPL;
-        renderLayerPL(dataPL, { updateControl: true, setInitialBounds: true });
-        return fetch('jalan_tegalrejo.geojson');
-      })
-      .then(function (res) { return res.json(); })
-      .then(function (dataJalan) {
-        const featsJalan = dataJalan.features || [];
-        const jalanEl = document.getElementById('count-jalan');
-        if (jalanEl) jalanEl.textContent = featsJalan.length;
+      if (layerZNT) {
+        if (updateControl) layerControl.removeLayer(layerZNT);
+        map.removeLayer(layerZNT);
+        layerZNT = null;
+      }
 
-        const layerJalan = L.geoJSON(dataJalan, {
-          style: getStyleJalan,
-          onEachFeature: function (feature, layer) { buatPopup(feature, layer, 'Jaringan Jalan'); }
-        }).addTo(map);
+      const zntEl = document.getElementById('count-znt');
+      if (zntEl) zntEl.textContent = featsZNT.length;
+      renderBarDistribusi('chart-znt', featsZNT, 'Nilai_Laha', 5);
 
-        layerControl.addOverlay(layerJalan, 'Jaringan Jalan');
-        return fetch('znt_tegalrejo.geojson');
-      })
-      .then(function (res) { return res.json(); })
-      .then(function (dataZNT) {
-        const featsZNT = dataZNT.features || [];
-        const zntEl = document.getElementById('count-znt');
-        if (zntEl) zntEl.textContent = featsZNT.length;
-        renderBarDistribusi('chart-znt', featsZNT, 'Nilai_Laha', 5);
-
-        const layerZNT = L.geoJSON(dataZNT, {
+      layerZNT = L.geoJSON(
+        { type: 'FeatureCollection', features: featsZNT },
+        {
+          pane: 'paneZNT',
           style: function (feature) {
+            const nilai = getPropValue(feature.properties, 'Nilai_Laha');
             return {
-              fillColor: getWarnaZNT(feature.properties && feature.properties.Nilai_Laha),
+              pane: 'paneZNT',
+              fillColor: getWarnaZNT(nilai),
               color: '#831843',
-              weight: 0.8,
+              weight: 0.9,
               fillOpacity: 0.65
             };
           },
-          onEachFeature: function (feature, layer) { buatPopup(feature, layer, 'Zona Nilai Tanah (ZNT)'); }
-        }).addTo(map);
+          onEachFeature: function (feature, layer) {
+            buatPopup(feature, layer, 'Zona Nilai Tanah (ZNT)');
+          }
+        }
+      );
 
+      if (shouldShow) {
+        layerZNT.addTo(map);
+      }
+
+      if (updateControl) {
         layerControl.addOverlay(layerZNT, 'Zona Nilai Tanah (ZNT)');
-        return fetch('fasilitas_umum.geojson');
-      })
-      .then(function (res) {
-        if (!res.ok) throw new Error('File fasilitas_umum.geojson belum tersedia');
-        return res.json();
-      })
-      .then(function (dataFasilitas) {
-        const featsFas = dataFasilitas.features || [];
-        const fasEl = document.getElementById('count-fasilitas');
-        if (fasEl) fasEl.textContent = featsFas.length;
+      }
+    }
 
-        const layerFasilitas = L.geoJSON(dataFasilitas, {
+    function renderLayerFasilitas(geojsonData, options = {}) {
+      const { updateControl = false, keepActiveState = true } = options;
+      const featsFas = Array.isArray(geojsonData.features) ? geojsonData.features : [];
+      const shouldShow = keepActiveState ? layerActiveState.fasilitas : true;
+
+      if (layerFasilitas) {
+        if (updateControl) layerControl.removeLayer(layerFasilitas);
+        map.removeLayer(layerFasilitas);
+        layerFasilitas = null;
+      }
+
+      const fasEl = document.getElementById('count-fasilitas');
+      if (fasEl) fasEl.textContent = featsFas.length;
+
+      layerFasilitas = L.geoJSON(
+        { type: 'FeatureCollection', features: featsFas },
+        {
+          pane: 'paneFasilitas',
           pointToLayer: function (feature, latlng) {
             return L.circleMarker(latlng, {
+              pane: 'paneFasilitas',
               radius: 7,
               fillColor: '#0284c7',
               color: '#ffffff',
@@ -1111,14 +1169,157 @@
             });
           },
           onEachFeature: function (feature, layer) {
-            const p = feature.properties || {};
-            const namaFas =
-              p.nama || p.NAMA || p.toponim || p.TOPONYM || p.JENIS || p.REMARK || 'Fasilitas Umum';
+            const namaFas = getPropValue(feature.properties, 'KGTN_OBJEK') || 'Fasilitas Umum';
             buatPopup(feature, layer, namaFas);
           }
-        }).addTo(map);
+        }
+      );
 
+      if (shouldShow) {
+        layerFasilitas.addTo(map);
+      }
+
+      if (updateControl) {
         layerControl.addOverlay(layerFasilitas, 'Persebaran Fasilitas Umum');
+      }
+    }
+
+    function applySearchAcrossLayers(keyword) {
+      const statusEl = document.getElementById('search-status');
+      const q = String(keyword || '').trim().toLowerCase();
+
+      // Jika kosong, kembalikan tiap layer ke data utuhnya tanpa mengubah centang aktifnya
+      if (!q) {
+        if (rawDataPL) renderLayerPL(rawDataPL, { keepActiveState: true });
+        if (rawDataJalan) renderLayerJalan(rawDataJalan, { keepActiveState: true });
+        if (rawDataZNT) renderLayerZNT(rawDataZNT, { keepActiveState: true });
+        if (rawDataFasilitas) renderLayerFasilitas(rawDataFasilitas, { keepActiveState: true });
+
+        if (layerPLBounds && layerPLBounds.isValid()) {
+          map.fitBounds(layerPLBounds);
+        }
+        if (statusEl) {
+          statusEl.textContent = 'Filter aktif pada layer yang menyala (PL: JENIS, Jalan: JENIS, ZNT: Nilai_Laha, Fasilitas: KGTN_OBJEK).';
+        }
+        return;
+      }
+
+      const summary = [];
+      const matchedBounds = [];
+
+      // 1. PL -> kolom JENIS (hanya jika layer PL sedang menyala)
+      if (rawDataPL && layerActiveState.pl) {
+        const filteredPL = (rawDataPL.features || []).filter(function (f) {
+          return getPropValue(f.properties, 'JENIS').toLowerCase().includes(q);
+        });
+        renderLayerPL({ type: 'FeatureCollection', features: filteredPL }, { keepActiveState: true });
+        summary.push(`PL: ${filteredPL.length}`);
+        if (layerPL && layerPL.getBounds().isValid()) matchedBounds.push(layerPL.getBounds());
+      }
+
+      // 2. Jalan -> kolom JENIS (hanya jika layer Jalan sedang menyala)
+      if (rawDataJalan && layerActiveState.jalan) {
+        const filteredJalan = (rawDataJalan.features || []).filter(function (f) {
+          return getPropValue(f.properties, 'JENIS').toLowerCase().includes(q);
+        });
+        renderLayerJalan({ type: 'FeatureCollection', features: filteredJalan }, { keepActiveState: true });
+        summary.push(`Jalan: ${filteredJalan.length}`);
+        if (layerJalan && layerJalan.getBounds().isValid()) matchedBounds.push(layerJalan.getBounds());
+      }
+
+      // 3. ZNT -> kolom Nilai_Laha (hanya jika layer ZNT sedang menyala)
+      if (rawDataZNT && layerActiveState.znt) {
+        const filteredZNT = (rawDataZNT.features || []).filter(function (f) {
+          return getPropValue(f.properties, 'Nilai_Laha').toLowerCase().includes(q);
+        });
+        renderLayerZNT({ type: 'FeatureCollection', features: filteredZNT }, { keepActiveState: true });
+        summary.push(`ZNT: ${filteredZNT.length}`);
+        if (layerZNT && layerZNT.getBounds().isValid()) matchedBounds.push(layerZNT.getBounds());
+      }
+
+      // 4. Persebaran Fasilitas Umum -> kolom KGTN_OBJEK (hanya jika layer Fasilitas sedang menyala)
+      if (rawDataFasilitas && layerActiveState.fasilitas) {
+        const filteredFas = (rawDataFasilitas.features || []).filter(function (f) {
+          return getPropValue(f.properties, 'KGTN_OBJEK').toLowerCase().includes(q);
+        });
+        renderLayerFasilitas({ type: 'FeatureCollection', features: filteredFas }, { keepActiveState: true });
+        summary.push(`Fasilitas: ${filteredFas.length}`);
+        if (layerFasilitas && layerFasilitas.getBounds().isValid()) matchedBounds.push(layerFasilitas.getBounds());
+      }
+
+      if (matchedBounds.length > 0) {
+        let combined = matchedBounds[0];
+        for (let i = 1; i < matchedBounds.length; i++) {
+          combined = combined.extend(matchedBounds[i]);
+        }
+        if (combined.isValid()) {
+          map.fitBounds(combined, { padding: [30, 30], maxZoom: 17 });
+        }
+      }
+
+      if (statusEl) {
+        statusEl.textContent = summary.length > 0
+          ? `Kata kunci "${keyword.trim()}" -> ${summary.join(' | ')}`
+          : 'Tidak ada layer aktif yang sedang menyala.';
+      }
+    }
+
+    const searchInput = document.getElementById('search-layer');
+    const resetBtn = document.getElementById('btn-reset-search');
+    if (searchInput) {
+      searchInput.addEventListener('input', function (e) {
+        applySearchAcrossLayers(e.target.value);
+      });
+    }
+    if (resetBtn) {
+      resetBtn.addEventListener('click', function () {
+        if (searchInput) searchInput.value = '';
+        applySearchAcrossLayers('');
+      });
+    }
+
+    // Muat tiap GeoJSON secara mandiri agar satu file gagal/belum ada tidak menghalangi layer lain
+    fetch('pl_tegalrejo.geojson')
+      .then(function (res) {
+        if (!res.ok) throw new Error('pl_tegalrejo.geojson tidak ditemukan');
+        return res.json();
+      })
+      .then(function (dataPL) {
+        rawDataPL = dataPL;
+        renderLayerPL(dataPL, { updateControl: true, setInitialBounds: true, keepActiveState: false });
+      })
+      .catch(function (err) { console.warn(err); });
+
+    fetch('jalan_tegalrejo.geojson')
+      .then(function (res) {
+        if (!res.ok) throw new Error('jalan_tegalrejo.geojson tidak ditemukan');
+        return res.json();
+      })
+      .then(function (dataJalan) {
+        rawDataJalan = dataJalan;
+        renderLayerJalan(dataJalan, { updateControl: true, keepActiveState: false });
+      })
+      .catch(function (err) { console.warn(err); });
+
+    fetch('znt_tegalrejo.geojson')
+      .then(function (res) {
+        if (!res.ok) throw new Error('znt_tegalrejo.geojson tidak ditemukan');
+        return res.json();
+      })
+      .then(function (dataZNT) {
+        rawDataZNT = dataZNT;
+        renderLayerZNT(dataZNT, { updateControl: true, keepActiveState: false });
+      })
+      .catch(function (err) { console.warn(err); });
+
+    fetch('fasilitas_umum.geojson')
+      .then(function (res) {
+        if (!res.ok) throw new Error('fasilitas_umum.geojson tidak ditemukan');
+        return res.json();
+      })
+      .then(function (dataFasilitas) {
+        rawDataFasilitas = dataFasilitas;
+        renderLayerFasilitas(dataFasilitas, { updateControl: true, keepActiveState: false });
       })
       .catch(function (err) { console.warn(err); });
 
@@ -1137,8 +1338,8 @@
         '<h4>Jaringan Jalan</h4>' +
         '<div class="legend-item"><span class="swatch-line" style="border-top:4px solid #dc2626;"></span>Jalan Arteri</div>' +
         '<div class="legend-item"><span class="swatch-line" style="border-top:3px solid #f97316;"></span>Jalan Kolektor</div>' +
-        '<div class="legend-item"><span class="swatch-line" style="border-top:2px solid #7e22ce;"></span>Jalan Lokal</div>' +
-        '<div class="legend-item"><span class="swatch-line" style="border-top:1.5px solid #334155;"></span>Jalan Lingkungan</div>' +
+        '<div class="legend-item"><span class="swatch-line" style="border-top:2.5px solid #7e22ce;"></span>Jalan Lokal</div>' +
+        '<div class="legend-item"><span class="swatch-line" style="border-top:2px solid #1e293b;"></span>Jalan Lingkungan</div>' +
         '<h4>Penggunaan Lahan</h4>' +
         '<div class="legend-item"><span class="swatch-poly" style="background:#ffaa00;"></span>Bangunan Hunian</div>' +
         '<div class="legend-item"><span class="swatch-poly" style="background:#ff2600;"></span>Perdagangan & Jasa</div>' +
