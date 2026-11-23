@@ -1017,13 +1017,10 @@
         return;
       }
 
-      const filteredFeatures = rawDataPL.features.filter(function(f) {
-        const props = f && f.properties ? f.properties : {};
-        return Object.values(props).some(function(val) {
-          if (val === null || val === undefined) return false;
-          const strVal = String(val).trim().toLowerCase();
-          return strVal.length > 0 && strVal.includes(q);
-        });
+     const filteredFeatures = rawDataPL.features.filter(function(f) {
+  const jenis = String((f.properties && f.properties.JENIS) || '').toLowerCase();
+  return jenis.includes(q);
+});
       });
 
       renderLayerPL(
